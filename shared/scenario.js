@@ -2,7 +2,7 @@
 // here, once. The server imports it to validate requests and build engine
 // calls; the web page imports it to draw the controls. Change it here only.
 
-export const APP_VERSION = '1.3.0'
+export const APP_VERSION = '1.4.0'
 
 // Engine: INOVUES desiccant lifetime simulator (StephanBK/desiccant_life-).
 // Needs the 2026-09-23 fog-map API (fog_map, years_after_full).
@@ -86,7 +86,8 @@ export const FIXED_DESCRIPTION = [
 export const ASSUMPTIONS = [
   'Fog means a water film thicker than 5 µm on the cavity side of the existing pane. That visibility threshold is an estimate; no optical measurement exists yet.',
   '"Wet-sealed" is the ASTM E283 detection floor (0.005 cfm/ft² at 75 Pa), not a measurement of an installed INOVUES seal. A pressure test on an installed cavity would replace it.',
-  'Once nearly full, the desiccant holds the cavity near its own equilibrium humidity and can release stored water. The engine gives 3A no extra capacity below 25 °C; real 3A holds a few percent more when cold, which would make this release, and the fog it causes, smaller. Fog shown after the desiccant is full should be read with this in mind.',
+  'With desorption on, the desiccant gives some water back when warm and takes it up again when cold, a small seasonal buffer: slightly less fog after it is full, and a longer life. The engine gives 3A no extra capacity below 25 °C; real 3A holds a few percent more when cold, so the results are on the cautious side here.',
+  'After the desiccant is full, the pane fogs about as much as with no desiccant. What decides how much is the real air leakage of the wet seals, which has not been measured on an installed cavity.',
   'The three glasses differ by their cavity-side temperature factor only; the assembly U-value is held at 0.16 for all three.',
   '"Desiccant full" means 95 % of its capacity at 25 °C.',
   'The same typical weather year repeats; no climate trend or unusual years.',
