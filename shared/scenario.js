@@ -2,7 +2,7 @@
 // here, once. The server imports it to validate requests and build engine
 // calls; the web page imports it to draw the controls. Change it here only.
 
-export const APP_VERSION = '1.5.0'
+export const APP_VERSION = '1.6.0'
 
 // Engine: INOVUES desiccant lifetime simulator (StephanBK/desiccant_life-).
 // Needs the 2026-09-23 fog-map API (fog_map, years_after_full).
@@ -71,6 +71,11 @@ export const EXPECTED_SITE = { zip: '10172', lat: 40.7555, lon: -73.975, tol_deg
 // Whole years simulated after the desiccant fills, so the first winter
 // with a full desiccant is always in the picture.
 export const YEARS_AFTER_FULL = 1
+
+// Working hours for the calendar toggle, as in the earlier condensation
+// calculator: Monday to Friday, 08:00 to 18:00. January 1 is a Monday, the
+// same convention the engine uses for its HVAC schedule. 261 weekdays x 10 h.
+export const WORKING_HOURS = { start: 8, end: 18, days: 261, hours: 2610, label: 'Monday to Friday, 08:00 to 18:00' }
 
 // Plain-language list of what is fixed, for the assumptions drawer.
 export const FIXED_DESCRIPTION = [

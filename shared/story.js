@@ -1,6 +1,8 @@
 // Pure functions that turn an engine result into words and calendar rows.
 // No DOM, no network: everything here is unit-tested (test/story.test.js).
 
+import { WORKING_HOURS } from './scenario.js'
+
 export const HOURS_PER_YEAR = 8760
 export const HOURS_PER_MONTH = HOURS_PER_YEAR / 12      // 730, a calendar-average month
 
@@ -218,17 +220,31 @@ export function headlineCards(r) {
   return [{ key: 'life', ...life }, { key: 'first', ...first }, { key: 'amount', ...amount }]
 }
 
+/** Is this hour of the year a working hour? Day 0 (January 1) is a Monday. */
+export function isWorkingHour(hourOfYear) {
+  const day = Math.floor(hourOfYear / 24)
+  const h = hourOfYear % 24
+  return day % 7 < 5 && h >= WORKING_HOURS.start && h < WORKING_HOURS.end
+}
+
 /**
  * Statistics of one year's fog map (8,760 digits, '0' = clear):
  *   hours    visible fog hours
  *   days     days with at least one fog hour
  *   events   unbroken runs of fog hours
  *   longest  longest run, hours
+ * With working = true only working hours count, and an off-hour ends a
+ * run (as in the earlier calculator), so no event exceeds one working day.
  */
-export function yearStats(fog) {
+export function yearStats(fog, working = false) {
   if (!fog) return { hours: 0, days: 0, events: 0, longest: 0 }
   let hours = 0, days = 0, events = 0, longest = 0, run = 0, dayHas = false
   for (let i = 0; i < fog.length; i++) {
+    if (working && !isWorkingHour(i)) {
+      run = 0
+      if (i % 24 === 23) { if (dayHas) days++; dayHas = false }
+      continue
+    }
     const on = fog.charCodeAt(i) !== 48
     if (on) {
       hours++

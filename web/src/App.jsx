@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { GLASSES, SEALS_EXISTING, SEALS_RETROFIT } from '../../shared/scenario.js'
+import { GLASSES, SEALS_EXISTING, SEALS_RETROFIT, WORKING_HOURS } from '../../shared/scenario.js'
 import { headlineCards, summarize } from '../../shared/story.js'
-import { fetchConfig, peek, queryOf, readUrlScenario, runScenario, writeUrlScenario } from './api.js'
+import { fetchConfig, peek, queryOf, readUrlHours, readUrlScenario, runScenario, writeUrlScenario } from './api.js'
 import Assumptions from './Assumptions.jsx'
 import Cavity from './Cavity.jsx'
 import { DesiccantSlider, dewPointF, GlassPicker, RoomSliders, SealLadder } from './Controls.jsx'
@@ -32,12 +32,14 @@ export default function App() {
   const [error, setError] = useState(null)
   const [drawer, setDrawer] = useState(false)
   const [attempt, setAttempt] = useState(0)
+  const [hours, setHours] = useState(readUrlHours)
   const kind = useRef('button')
+
+  useEffect(() => { writeUrlScenario(scenario, hours) }, [scenario, hours])
 
   useEffect(() => { fetchConfig().then(setConfig).catch(() => setConfig(null)) }, [])
 
   useEffect(() => {
-    writeUrlScenario(scenario)
     const hit = peek(scenario)
     if (hit) { setData(hit); setBusy(false); setError(null); return undefined }
     const ctl = new AbortController()
@@ -128,11 +130,26 @@ export default function App() {
         </section>
 
         <section className={`results${dim}`} aria-label="Fog calendar">
-          <h2 className="results-title">When the pane fogs, hour by hour</h2>
+          <div className="results-head">
+            <h2 className="results-title">When the pane fogs, hour by hour</h2>
+            <div className="hours-toggle">
+              <div className="seg seg-small" role="radiogroup" aria-label="Hours shown in the calendar">
+                {[['all', 'All hours'], ['working', 'Working hours']].map(([k, label]) => (
+                  <button key={k} type="button" role="radio" aria-checked={hours === k} className={hours === k ? 'on' : ''}
+                    onClick={() => setHours(k)}>{label}</button>
+                ))}
+              </div>
+              <p className="hours-note">
+                {hours === 'working'
+                  ? `Working hours: ${WORKING_HOURS.label} (${WORKING_HOURS.hours.toLocaleString('en-US')} hours a year). The boxes at the top count all hours.`
+                  : 'Every hour of the year counts.'}
+              </p>
+            </div>
+          </div>
           {r ? (
             <>
-              <FogCalendar result={r} runKey={queryOf(data.scenario)} />
-              <Legend />
+              <FogCalendar result={r} runKey={queryOf(data.scenario)} working={hours === 'working'} />
+              <Legend working={hours === 'working'} />
             </>
           ) : !error && <div className="sk-strip" aria-hidden="true" />}
         </section>

@@ -1,6 +1,6 @@
 # HANDOVER: 277 Park cavity fog outlook
 
-Last session: 2026-09-23 (session 1). State: v1.5.0. Repo
+Last session: 2026-09-23 (session 1). State: v1.6.0. Repo
 StephanBK/park277-desiccant (Stephan's personal account, not INOVUES-APPS),
 local clone ~/Documents/park277-desiccant. v1.3.0 deployed on Railway
 (main fdb261f) against the fixed engine (desiccant_life- main c20a557);
@@ -16,6 +16,21 @@ v1.4.0 delivered as a patch.
    variables needed.
 If the engine lacks the fog map, the page shows "The simulation did not
 run" with the detail "engine returned no fog map": by design, not a crash.
+
+## v1.6.0 (same day): working-hours toggle on the calendar
+
+- Stephan: toggle between working hours and all hours for the calendar,
+  "like before". Same definition as the earlier condensation calculator:
+  Monday to Friday, 08:00 to 18:00 (2,610 h, 261 days), January 1 a Monday,
+  the engine's own HVAC convention. shared/scenario.js WORKING_HOURS,
+  story.js isWorkingHour / yearStats(fog, working).
+- Working view: off-hours cells faded out and not counted; stats become
+  "% of 2,610 working hours" / "% of 261 working days"; an off hour ends a
+  fog event (so no event exceeds 10 h). The three boxes at the top always
+  count all hours (the note under the toggle says so). View kept in the
+  link as &hours=working; never sent to the API.
+- Default, year 2: all hours 1,446 h (16.5 %); working hours 420 h (16.1 %),
+  43 working days. Near-equal shares: the winter fog is one long spell.
 
 ## v1.5.0 (same day): design pass for Anas
 
@@ -37,7 +52,7 @@ run" with the detail "engine returned no fog map": by design, not a crash.
 - FLAG, not acted on: 8 lb of 3A is 5.2 L (bulk 0.70 g/mL). A 0.6 x 0.6 in
   channel around the whole 60 x 96 in perimeter holds 312 in x 0.36 in2 =
   112 in3 = 1.84 L, about 2.8 lb. Above ~3 lb may not physically fit a
-  0.6 in cavity; the slider still goes to 8 lb.
+  0.6 in cavity. DECIDED (Stephan): do not cap; the slider stays 0 to 8 lb.
 
 ## v1.4.0 (same day): drawer text after the engine fix
 

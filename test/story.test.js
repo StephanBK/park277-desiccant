@@ -223,3 +223,23 @@ test('desiccant status per year', async () => {
   assert.deepEqual(desiccantStatus(run({ capped: true }), 0), { value: 'Working', sub: 'all year' })
   assert.equal(desiccantStatus(run({ lb: 0 }), 0).value, 'None')
 })
+
+test('working hours: Monday to Friday 08:00 to 18:00, January 1 a Monday', async () => {
+  const { isWorkingHour } = await import('../shared/story.js')
+  let n = 0
+  for (let i = 0; i < 8760; i++) if (isWorkingHour(i)) n++
+  assert.equal(n, 2610)                               // 261 weekdays x 10 h
+  assert.equal(isWorkingHour(8), true)                // Mon Jan 1, 08:00
+  assert.equal(isWorkingHour(7), false)
+  assert.equal(isWorkingHour(18), false)              // 18:00 is off
+  assert.equal(isWorkingHour(5 * 24 + 10), false)     // Saturday Jan 6
+  assert.equal(isWorkingHour(7 * 24 + 10), true)      // Monday Jan 8
+})
+
+test('year statistics in working hours only', async () => {
+  const { yearStats } = await import('../shared/story.js')
+  // fog all of Monday Jan 1 (24 h) and all of Saturday Jan 6
+  const s = '1'.repeat(24) + '0'.repeat(4 * 24) + '1'.repeat(24) + '0'.repeat(8760 - 6 * 24)
+  assert.deepEqual(yearStats(s), { hours: 48, days: 2, events: 2, longest: 24 })
+  assert.deepEqual(yearStats(s, true), { hours: 10, days: 1, events: 1, longest: 10 })   // Saturday excluded
+})

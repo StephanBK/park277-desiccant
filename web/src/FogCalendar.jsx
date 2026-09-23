@@ -1,14 +1,16 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
-  calendarRows, desiccantStatus, formatDate, formatDays, HOURS_PER_YEAR, levelRangeUm, levelWord,
+  calendarRows, desiccantStatus, formatDate, formatDays, HOURS_PER_YEAR, isWorkingHour, levelRangeUm, levelWord,
   MONTH_SHORT, MONTH_START_DAY, remainingOnDay, yearStats,
 } from '../../shared/story.js'
+import { WORKING_HOURS } from '../../shared/scenario.js'
 
 // One panel per year: a stat row, then a grid of 365 x 24 cells (columns are
 // days, rows are hours, 00:00 at the top), each cell one hour.
 const DAYS = 365
 const ROW = 5                         // css px per hour row: 4 px cell + 1 px gap
 const CLEAR = [231, 235, 238]         // no fog
+const EXCLUDED = [246, 247, 248]      // off hours, not counted (working-hours view)
 const DRY_FRESH = [120, 196, 207]     // desiccant working, fresh
 const DRY_SPENT = [205, 234, 238]     // desiccant working, nearly full
 const FOG_LIGHT = [150, 180, 228]     // fog, thinnest visible film
@@ -25,7 +27,7 @@ function working(r, gh) {
   return r.full_hour === null || gh < r.full_hour
 }
 
-function drawYear(canvas, r, yi, width, progress) {
+function drawYear(canvas, r, yi, width, progress, workingOnly) {
   const dpr = window.devicePixelRatio || 1
   const H = 24 * ROW
   const pw = Math.round(width * dpr)
@@ -43,6 +45,7 @@ function drawYear(canvas, r, yi, width, progress) {
   const y0 = yi * HOURS_PER_YEAR
   const fog = r.years[yi].fog
   const clear = rgb(CLEAR)
+  const excluded = rgb(EXCLUDED)
   const fogStyles = [null]
   for (let l = 1; l <= 9; l++) fogStyles[l] = fogColor(l)
 
@@ -54,6 +57,11 @@ function drawYear(canvas, r, yi, width, progress) {
       const i = d * 24 + h
       const l = fog ? fog.charCodeAt(i) - 48 : 0
       const hgt = ys[h + 1] - ys[h] - gapY
+      if (workingOnly && !isWorkingHour(i)) {          // off hours: faded out, not counted
+        ctx.fillStyle = excluded
+        ctx.fillRect(xs[d], ys[h], w, hgt)
+        continue
+      }
       // base: clear or desiccant working
       ctx.fillStyle = working(r, y0 + i) ? dry : clear
       ctx.fillRect(xs[d], ys[h], w, hgt)
@@ -67,7 +75,13 @@ function drawYear(canvas, r, yi, width, progress) {
   }
 }
 
-function describe(r, gh, level, multi) {
+function describe(r, gh, level, multi, workingOnly) {
+  const d = describeHour(r, gh, level, multi)
+  if (workingOnly && !isWorkingHour(gh % HOURS_PER_YEAR)) return { ...d, state: `Off hours, not counted. ${d.state}`, kind: 'clear' }
+  return d
+}
+
+function describeHour(r, gh, level, multi) {
   const h = gh % 24
   const title = `${formatDate(gh, multi)}, ${clock(h)} to ${clock((h + 1) % 24)}`
   if (level > 0) {
@@ -91,19 +105,21 @@ function Stat({ label, value, sub, tone }) {
   )
 }
 
-function YearPanel({ r, index, width, progress, multi }) {
+function YearPanel({ r, index, width, progress, multi, workingOnly }) {
   const canvas = useRef(null)
   const [hover, setHover] = useState(null)
   const y0 = index * HOURS_PER_YEAR
   const y1 = y0 + HOURS_PER_YEAR
   const H = 24 * ROW
   const year = r.years[index]
-  const st = yearStats(year.fog)
+  const st = yearStats(year.fog, workingOnly)
+  const poolH = workingOnly ? WORKING_HOURS.hours : HOURS_PER_YEAR
+  const poolD = workingOnly ? WORKING_HOURS.days : DAYS
   const des = desiccantStatus(r, index)
 
   useLayoutEffect(() => {
-    if (canvas.current && width > 0) drawYear(canvas.current, r, index, width, progress)
-  }, [r, index, width, progress])
+    if (canvas.current && width > 0) drawYear(canvas.current, r, index, width, progress, workingOnly)
+  }, [r, index, width, progress, workingOnly])
 
   const xOf = (gh) => (((gh - y0) / 24) / DAYS) * width
   const fullHere = r.lb > 0 && r.full_hour !== null && r.full_hour >= y0 && r.full_hour < y1
@@ -115,7 +131,7 @@ function YearPanel({ r, index, width, progress, multi }) {
     const h = Math.min(23, Math.max(0, Math.floor((e.clientY - box.top) / ROW)))
     const i = d * 24 + h
     const level = year.fog ? year.fog.charCodeAt(i) - 48 : 0
-    setHover({ d, h, ...describe(r, y0 + i, level, multi) })
+    setHover({ d, h, ...describe(r, y0 + i, level, multi, workingOnly) })
   }
 
   const marks = []
@@ -128,10 +144,13 @@ function YearPanel({ r, index, width, progress, multi }) {
         <h3><span className="ynum">{String(index + 1).padStart(2, '0')}</span>Year {index + 1}</h3>
       </header>
       <div className="ystats">
-        <Stat label="Fog hours" value={st.hours.toLocaleString('en-US')} sub={`${((100 * st.hours) / HOURS_PER_YEAR).toFixed(1)} % of 8,760 hours`} tone={st.hours ? 'fog' : ''} />
-        <Stat label="Days with fog" value={st.days} sub={`${((100 * st.days) / DAYS).toFixed(1)} % of the year`} tone={st.days ? 'fog' : ''} />
+        <Stat label={workingOnly ? 'Fog hours, working' : 'Fog hours'} value={st.hours.toLocaleString('en-US')}
+          sub={`${((100 * st.hours) / poolH).toFixed(1)} % of ${poolH.toLocaleString('en-US')} ${workingOnly ? 'working hours' : 'hours'}`} tone={st.hours ? 'fog' : ''} />
+        <Stat label={workingOnly ? 'Working days with fog' : 'Days with fog'} value={st.days}
+          sub={`${((100 * st.days) / poolD).toFixed(1)} % of ${workingOnly ? `${poolD} working days` : 'the year'}`} tone={st.days ? 'fog' : ''} />
         <Stat label="Fog events" value={st.events} sub={st.events ? `avg ${Math.round(st.hours / st.events)} h each` : 'none'} />
-        <Stat label="Longest event" value={st.longest ? `${st.longest.toLocaleString('en-US')} h` : '0 h'} sub={st.longest >= 48 ? `about ${formatDays(st.longest)}` : 'unbroken fog'} />
+        <Stat label="Longest event" value={st.longest ? `${st.longest.toLocaleString('en-US')} h` : '0 h'}
+          sub={workingOnly ? 'within one working day' : st.longest >= 48 ? `about ${formatDays(st.longest)}` : 'unbroken fog'} />
         <Stat label="Desiccant" value={des.value} sub={des.sub} tone={des.value === 'Working' ? 'dry' : ''} />
       </div>
       <div className="ygrid">
@@ -146,7 +165,7 @@ function YearPanel({ r, index, width, progress, multi }) {
           </div>
           <div className="ycanvas" style={{ height: H }}>
             <canvas ref={canvas} style={{ width, height: H }} onPointerMove={onMove} onPointerLeave={() => setHover(null)}
-              role="img" aria-label={`Year ${index + 1}: ${st.hours} fog hours on ${st.days} days`} />
+              role="img" aria-label={`Year ${index + 1}: ${st.hours} fog hours on ${st.days} days${workingOnly ? ', working hours only' : ''}`} />
             {fullHere && <span className="yline full" style={{ left: xOf(r.full_hour) }} />}
             {hover && (
               <>
@@ -202,11 +221,12 @@ function useDevelop(key) {
   return p
 }
 
-export function Legend() {
+export function Legend({ working = false }) {
   return (
     <div className="ylegend">
       <span className="key"><i className="sq dry" />Desiccant working (fades as it fills)</span>
       <span className="key"><i className="sq clear" />No fog</span>
+      {working && <span className="key"><i className="sq excluded" />Off hours, not counted</span>}
       <span className="key">
         {[1, 5, 9].map((l) => <i key={l} className="sq" style={{ background: fogColor(l) }} />)}
         Fog, light to heavy
@@ -218,7 +238,7 @@ export function Legend() {
   )
 }
 
-export default function FogCalendar({ result, runKey }) {
+export default function FogCalendar({ result, runKey, working = false }) {
   const wrap = useRef(null)
   const [width, setWidth] = useState(0)
   const progress = useDevelop(runKey)
@@ -245,7 +265,7 @@ export default function FogCalendar({ result, runKey }) {
     <div className="calendar" ref={wrap}>
       {width > 0 && rows.map((row) => (row.kind === 'band'
         ? <Band key={`b${row.from}`} from={row.from} to={row.to} />
-        : <YearPanel key={row.index} r={result} index={row.index} width={width} progress={progress} multi={multi} />))}
+        : <YearPanel key={row.index} r={result} index={row.index} width={width} progress={progress} multi={multi} workingOnly={working} />))}
     </div>
   )
 }

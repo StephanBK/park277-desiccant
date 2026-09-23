@@ -76,7 +76,14 @@ export function readUrlScenario(search = window.location.search) {
   }
 }
 
-export function writeUrlScenario(s) {
-  const url = `${window.location.pathname}?${queryOf(s)}`
+/** Calendar view from the address bar: 'working' or 'all' (default). */
+export function readUrlHours(search = window.location.search) {
+  return new URLSearchParams(search).get('hours') === 'working' ? 'working' : 'all'
+}
+
+/** Scenario plus the calendar view into the address bar (the view never goes to the API). */
+export function writeUrlScenario(s, hours = 'all') {
+  const q = queryOf(s) + (hours === 'working' ? '&hours=working' : '')
+  const url = `${window.location.pathname}?${q}`
   if (url !== `${window.location.pathname}${window.location.search}`) window.history.replaceState(null, '', url)
 }
