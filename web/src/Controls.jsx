@@ -1,4 +1,4 @@
-import { GLASSES, RANGES, SEALS_EXISTING, SEALS_RETROFIT } from '../../shared/scenario.js'
+import { GLASSES, RANGES } from '../../shared/scenario.js'
 
 // Leak bar length on a log scale: the ladders span 0.005 to 2.0 cfm/ft2,
 // a factor of 400, so a linear bar would show everything but the last rung
@@ -22,7 +22,7 @@ export function dewPointF(tF, rhPct) {
   return (td * 9) / 5 + 32
 }
 
-function Section({ title, hint, children }) {
+function Group({ title, hint, children }) {
   return (
     <section className="ctl">
       <div className="ctl-head">
@@ -34,9 +34,9 @@ function Section({ title, hint, children }) {
   )
 }
 
-function Ladder({ title, items, value, onPick, engineValues }) {
+export function SealLadder({ title, items, value, onPick, engineValues }) {
   return (
-    <Section title={title} hint="Tightest first">
+    <Group title={title} hint="Tightest first">
       <div className="ladder" role="radiogroup" aria-label={title}>
         {items.map((it) => {
           const eng = engineValues?.find((e) => e.key === it.key)?.engine
@@ -56,7 +56,7 @@ function Ladder({ title, items, value, onPick, engineValues }) {
           )
         })}
       </div>
-    </Section>
+    </Group>
   )
 }
 
@@ -79,46 +79,39 @@ function Slider({ id, label, value, unit, range, onChange, ticks }) {
   )
 }
 
-export default function Controls({ scenario, update, config }) {
-  const lbTicks = []
-  for (let v = RANGES.lb.min; v <= RANGES.lb.max; v += 2) lbTicks.push(v)
-  const dp = dewPointF(scenario.t, scenario.rh)
-
+export function GlassPicker({ value, onPick }) {
   return (
-    <aside className="controls" aria-label="Scenario">
-      <Section title="Retrofit glass">
-        <div className="seg" role="radiogroup" aria-label="Retrofit glass">
-          {GLASSES.map((g) => {
-            const on = scenario.glass === g.key
-            return (
-              <button key={g.key} type="button" role="radio" aria-checked={on} className={on ? 'on' : ''}
-                data-tip={g.tip} onClick={() => update({ glass: g.key })}>
-                {g.label}
-              </button>
-            )
-          })}
-        </div>
-      </Section>
+    <Group title="Retrofit glass">
+      <div className="seg" role="radiogroup" aria-label="Retrofit glass">
+        {GLASSES.map((g) => {
+          const on = value === g.key
+          return (
+            <button key={g.key} type="button" role="radio" aria-checked={on} className={on ? 'on' : ''}
+              data-tip={g.tip} onClick={() => onPick(g.key)}>
+              {g.label}
+            </button>
+          )
+        })}
+      </div>
+    </Group>
+  )
+}
 
-      <Ladder title="Existing window seal" items={SEALS_EXISTING} value={scenario.seal_out}
-        engineValues={config?.seals_existing} onPick={(k) => update({ seal_out: k })} />
-      <Ladder title="Retrofit seal" items={SEALS_RETROFIT} value={scenario.seal_in}
-        engineValues={config?.seals_retrofit} onPick={(k) => update({ seal_in: k })} />
+export function DesiccantSlider({ value, onChange }) {
+  const ticks = []
+  for (let v = RANGES.lb.min; v <= RANGES.lb.max; v += 2) ticks.push(v)
+  return (
+    <Group title="Desiccant">
+      <Slider id="lb" label="Per window" value={value} unit=" lb" range={RANGES.lb} ticks={ticks} onChange={onChange} />
+    </Group>
+  )
+}
 
-      <Section title="Desiccant">
-        <Slider id="lb" label="Amount per window" value={scenario.lb} unit=" lb" range={RANGES.lb}
-          ticks={lbTicks} onChange={(v) => update({ lb: v }, 'slider')} />
-      </Section>
-
-      <Section title="Room">
-        <Slider id="t" label="Temperature" value={scenario.t} unit=" °F" range={RANGES.t}
-          onChange={(v) => update({ t: v }, 'slider')} />
-        <Slider id="rh" label="Relative humidity" value={scenario.rh} unit=" %" range={RANGES.rh}
-          onChange={(v) => update({ rh: v }, 'slider')} />
-        <p className="dew" data-tip="Air that reaches a surface colder than its dew point leaves water on it. The existing pane in winter is far colder than this.">
-          Room dew point {Math.round(dp)} °F
-        </p>
-      </Section>
-    </aside>
+export function RoomSliders({ t, rh, onT, onRh }) {
+  return (
+    <Group title="Room air">
+      <Slider id="t" label="Temperature" value={t} unit=" °F" range={RANGES.t} onChange={onT} />
+      <Slider id="rh" label="Relative humidity" value={rh} unit=" %" range={RANGES.rh} onChange={onRh} />
+    </Group>
   )
 }

@@ -1,7 +1,23 @@
 # HANDOVER: 277 Park cavity fog outlook
 
-Last session: 2026-09-23 (session 1). State: v1.0.0 built, tested
-end-to-end against the patched engine running locally; not yet deployed.
+Last session: 2026-09-23 (session 1, two passes). State: v1.1.0 built,
+tested end-to-end against the patched engine running locally; not yet deployed.
+
+## v1.1.0 (same day): cavity in the middle, light theme
+
+- Stephan asked for the cavity in the middle with the values set left and
+  right of it, and a light theme.
+- Layout: answer sentence on top; then [existing window seal | live cavity
+  section | retrofit seal + room temperature + RH]; glass and desiccant
+  directly under the drawing; fog calendar full width below.
+- web/src/Cavity.jsx: SVG section, not to scale. Outside, existing pane,
+  cavity with the desiccant cartridge (height follows lb), retrofit glass by
+  type (VIG with pillars), seal beads (solid = wet-sealed, dashed + air
+  arrows for leakier rungs, more arrows further down the ladder), room
+  T/RH/dew point, and result chips (dry for X, fog hours once full), fog
+  band and droplets on the pane when the run fogs.
+- Light theme: fog is amber (#d9731c) because white mist does not show on
+  a light page; teal (#138fa3) still means desiccant working.
 
 ## Deploy order (matters)
 
@@ -43,11 +59,12 @@ with the detail "engine returned no fog map": by design, not a crash.
 
 ## Design notes
 
-- Palette: night glass #0a1622, pane #102231, teal #26aebf (working),
-  mist #ecf4f7 (fog). Archivo variable, self-hosted; wide cut for headings.
-- Fog opacity 0.52 + 0.053 x level; teal 0.12 + 0.34 x remaining capacity.
+- Palette (v1.1): page #f7f9fa, ink #13232f, clear cell #e3ecf1, teal
+  #138fa3 (working), amber #d9731c (fog). Archivo variable, self-hosted;
+  wide cut for headings. (v1.0 was dark: night glass with white mist.)
+- Fog opacity 0.5 + 0.055 x level; teal 0.16 + 0.5 x remaining capacity.
 - Runs of 3+ quiet years fold into one band (tested; rare with 8 lb max).
-- Class names: header is `.top`; calendar lanes are `.lane-top` /
+- Class names: header is `.masthead`; calendar lanes are `.lane-top` /
   `.lane-bottom` (a shared `.top` once inflated the lanes).
 
 ## Open items

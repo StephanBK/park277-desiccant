@@ -5,9 +5,9 @@ import {
 } from '../../shared/story.js'
 
 const DAYS = 365
-const GLASS = '#102231'            // clear pane
-const TEAL = [38, 174, 191]        // desiccant working
-const MIST = [236, 244, 247]       // fog
+const GLASS = '#e3ecf1'            // clear pane
+const TEAL = [19, 143, 163]        // desiccant working (INOVUES teal)
+const FOG = [217, 115, 28]         // fog (amber)
 
 function rowHeight(width, rows) {
   if (width < 520) return 3
@@ -41,21 +41,21 @@ function drawStrip(canvas, r, yearIndex, width, rowH, progress) {
     if (!working(r, first)) break
     const cut = r.full_hour === null ? 24 : Math.min(24, r.full_hour - first)
     const rem = remainingOnDay(r.daily_loading_pct[yearIndex * DAYS + d])
-    const a = (0.12 + 0.34 * rem) * progress
+    const a = (0.16 + 0.5 * rem) * progress
     ctx.fillStyle = `rgba(${TEAL[0]},${TEAL[1]},${TEAL[2]},${a.toFixed(3)})`
     ctx.fillRect(x(d), 0, x(d + 1) - x(d), y(cut))
   }
 
   // Guides: month starts and 6 am / noon / 6 pm, barely there.
-  ctx.fillStyle = 'rgba(255,255,255,0.045)'
+  ctx.fillStyle = 'rgba(19,35,47,0.07)'
   for (let m = 1; m < 12; m++) ctx.fillRect(x(MONTH_START_DAY[m]), 0, Math.max(1, Math.round(dpr)), ph)
   for (const h of [6, 12, 18]) ctx.fillRect(0, y(h), pw, Math.max(1, Math.round(dpr)))
 
-  // Fog: white mist, more opaque as the film thickens.
+  // Fog: amber, more opaque as the film thickens.
   const fog = r.years[yearIndex].fog
   if (fog) {
     const styles = []
-    for (let l = 1; l <= 9; l++) styles[l] = `rgba(${MIST[0]},${MIST[1]},${MIST[2]},${((0.52 + 0.053 * l) * progress).toFixed(3)})`
+    for (let l = 1; l <= 9; l++) styles[l] = `rgba(${FOG[0]},${FOG[1]},${FOG[2]},${((0.5 + 0.055 * l) * progress).toFixed(3)})`
     for (let i = 0; i < fog.length; i++) {
       const l = fog.charCodeAt(i) - 48
       if (l <= 0) continue

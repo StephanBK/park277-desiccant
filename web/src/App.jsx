@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { GLASSES, SEALS_EXISTING, SEALS_RETROFIT } from '../../shared/scenario.js'
 import { summarize } from '../../shared/story.js'
 import { fetchConfig, peek, queryOf, readUrlScenario, runScenario, writeUrlScenario } from './api.js'
 import Assumptions from './Assumptions.jsx'
-import Controls from './Controls.jsx'
+import Cavity from './Cavity.jsx'
+import { DesiccantSlider, dewPointF, GlassPicker, RoomSliders, SealLadder } from './Controls.jsx'
 import FogCalendar from './FogCalendar.jsx'
 
 function Legend() {
@@ -15,17 +17,6 @@ function Legend() {
         Each column is a day, each row an hour of that day, midnight at the top. Year 1 starts with installation on January 1.
         Hover the calendar for any hour.
       </p>
-    </div>
-  )
-}
-
-function Skeleton() {
-  return (
-    <div className="skeleton" aria-hidden="true">
-      <div className="sk-line wide" />
-      <div className="sk-line" />
-      <div className="sk-strip" />
-      <div className="sk-strip" />
     </div>
   )
 }
@@ -80,13 +71,19 @@ export default function App() {
   }, [])
   const closeDrawer = useCallback(() => setDrawer(false), [])
 
-  const r = data?.result
+  const r = error ? null : data?.result
   const sentences = r ? summarize(r) : []
   const years = r?.years_run ?? 0
+  const ranks = {
+    out: SEALS_EXISTING.findIndex((s) => s.key === scenario.seal_out),
+    in: SEALS_RETROFIT.findIndex((s) => s.key === scenario.seal_in),
+  }
+  const glassLabel = GLASSES.find((g) => g.key === scenario.glass).label
+  const dim = busy && data ? ' busy' : ''
 
   return (
     <div className="shell">
-      <header className="top">
+      <header className="masthead">
         <div className="brand">
           <img className="mark" src="/inovues-mark.png" alt="" width="20" height="32" />
           <img className="word" src="/inovues-wordmark.png" alt="INOVUES" width="118" height="23" />
@@ -98,25 +95,53 @@ export default function App() {
         <button type="button" className="ghost" onClick={() => setDrawer(true)}>Assumptions</button>
       </header>
 
-      <div className="body">
-        <Controls scenario={scenario} update={update} config={config} />
+      <main className="page" aria-busy={busy}>
+        <div className="progress" aria-hidden="true" data-on={busy ? '1' : '0'} />
 
-        <main className={`stage${busy && data ? ' busy' : ''}`} aria-busy={busy}>
-          <div className="progress" aria-hidden="true" data-on={busy ? '1' : '0'} />
+        <section className={`answer-block${dim}`}>
           {error && <ErrorPanel error={error} onRetry={() => setAttempt((a) => a + 1)} />}
-          {!error && !data && <Skeleton />}
-          {!error && r && (
+          {!error && !r && <div className="sk-line wide" aria-hidden="true" />}
+          {r && (
             <>
               <p className="answer" aria-live="polite">{sentences.join(' ')}</p>
-              <p className="basis">
-                Simulated hour by hour over {years === 1 ? 'one year' : `${years} years`} of typical weather at the site.
-              </p>
+              <p className="basis">Simulated hour by hour over {years === 1 ? 'one year' : `${years} years`} of typical weather at the site.</p>
+            </>
+          )}
+        </section>
+
+        <section className="rig" aria-label="Scenario">
+          <div className="side outside-side">
+            <SealLadder title="Existing window seal" items={SEALS_EXISTING} value={scenario.seal_out}
+              engineValues={config?.seals_existing} onPick={(k) => update({ seal_out: k })} />
+          </div>
+
+          <div className="center">
+            <Cavity scenario={scenario} sealRanks={ranks} result={r} busy={busy} glassLabel={glassLabel}
+              dewF={dewPointF(scenario.t, scenario.rh)} />
+            <div className="under">
+              <GlassPicker value={scenario.glass} onPick={(k) => update({ glass: k })} />
+              <DesiccantSlider value={scenario.lb} onChange={(v) => update({ lb: v }, 'slider')} />
+            </div>
+          </div>
+
+          <div className="side room-side">
+            <SealLadder title="Retrofit seal" items={SEALS_RETROFIT} value={scenario.seal_in}
+              engineValues={config?.seals_retrofit} onPick={(k) => update({ seal_in: k })} />
+            <RoomSliders t={scenario.t} rh={scenario.rh}
+              onT={(v) => update({ t: v }, 'slider')} onRh={(v) => update({ rh: v }, 'slider')} />
+          </div>
+        </section>
+
+        <section className={`results${dim}`} aria-label="Fog calendar">
+          <h2 className="results-title">When the pane fogs, hour by hour</h2>
+          {r ? (
+            <>
               <FogCalendar result={r} runKey={queryOf(data.scenario)} />
               <Legend />
             </>
-          )}
-        </main>
-      </div>
+          ) : !error && <div className="sk-strip" aria-hidden="true" />}
+        </section>
+      </main>
 
       <Assumptions open={drawer} onClose={closeDrawer} engineVersion={config?.engine_version} />
     </div>
