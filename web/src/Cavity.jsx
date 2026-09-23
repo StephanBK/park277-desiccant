@@ -1,4 +1,4 @@
-import { formatDuration, fogPerYear } from '../../shared/story.js'
+import { formatDays, fogPerYear } from '../../shared/story.js'
 
 // Section through the window, outside on the left, room on the right.
 // Not to scale: the 0.6 in cavity is drawn wide so its contents read.
@@ -74,7 +74,7 @@ export function fogChip(r) {
 export function dryChip(r) {
   if (!r || r.lb === 0) return null
   if (r.full_hour === null) return `Still dry after ${r.max_years} years`
-  return `Dry for ${formatDuration(r.full_hour)}`
+  return `Dry for ${formatDays(r.full_hour)}`
 }
 
 export default function Cavity({ scenario, sealRanks, result, busy, dewF, glassLabel }) {

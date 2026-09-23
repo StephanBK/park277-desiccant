@@ -60,6 +60,13 @@ function oneDecimal(x) {
   return s.endsWith('.0') ? s.slice(0, -2) : s
 }
 
+/** Elapsed time in days (hours below one day), e.g. "390 days". */
+export function formatDays(hours) {
+  if (hours < 24) return `${Math.round(hours)} ${Math.round(hours) === 1 ? 'hour' : 'hours'}`
+  const d = Math.round(hours / 24)
+  return `${d.toLocaleString('en-US')} ${d === 1 ? 'day' : 'days'}`
+}
+
 export function formatHours(n) {
   return `${n.toLocaleString('en-US')} ${n === 1 ? 'hour' : 'hours'}`
 }
@@ -178,24 +185,21 @@ export function headlineCards(r) {
   const total = r.years.reduce((s, y) => s + y.fog_hours, 0)
   const fog = r.first_fog_hour
   const full = r.full_hour
-  const yearOf = (h) => `Year ${hourParts(h).year}`
 
-  // 1. Desiccant life
+  // 1. Desiccant life, in days (same unit as box 2), date below
   let life
   if (r.lb === 0) life = { tone: 'none', label: 'Desiccant', value: 'None', detail: 'Seals and room air alone' }
-  else if (full === null) life = { tone: 'dry', label: 'Desiccant keeps the cavity dry for', value: `${r.max_years}+ years`, detail: 'Still working at the end of the run' }
-  else life = { tone: 'dry', label: 'Desiccant keeps the cavity dry for', value: formatDuration(full), detail: `Full on ${formatDate(full, multi)}` }
+  else if (full === null) life = { tone: 'dry', label: 'Desiccant keeps the cavity dry for', value: `${(r.max_years * 365).toLocaleString('en-US')}+ days`, detail: `Still working after ${r.max_years} years` }
+  else life = { tone: 'dry', label: 'Desiccant keeps the cavity dry for', value: formatDays(full), detail: `Full on ${formatDate(full, multi)} (${formatDuration(full)})` }
 
-  // 2. First visible fog
+  // 2. First visible fog, in days after installation, date below
   let first
   if (fog === null) {
     first = { tone: 'none', label: 'First visible fog', value: 'None', detail: r.lb === 0 ? 'Clear all year' : `Clear through the ${formatDuration(r.hours_run)} shown` }
   } else {
-    let when
-    if (r.lb === 0) when = 'Without desiccant'
-    else if (full === null || fog < full) when = `${multi ? `${yearOf(fog)}, b` : 'B'}efore the desiccant is full`
-    else when = `${multi ? `${yearOf(fog)}, a` : 'A'}fter the desiccant is full`
-    first = { tone: 'fog', label: 'First visible fog', value: formatDate(fog, false), detail: when }
+    let label = 'First visible fog'
+    if (r.lb > 0 && (full === null || fog < full)) label = 'First visible fog, before the desiccant is full'
+    first = { tone: 'fog', label, value: formatDays(fog), detail: formatDate(fog, multi) }
   }
 
   // 3. Fog in one year (always the same unit, so cases compare fairly)
@@ -212,4 +216,41 @@ export function headlineCards(r) {
   }
 
   return [{ key: 'life', ...life }, { key: 'first', ...first }, { key: 'amount', ...amount }]
+}
+
+/**
+ * Statistics of one year's fog map (8,760 digits, '0' = clear):
+ *   hours    visible fog hours
+ *   days     days with at least one fog hour
+ *   events   unbroken runs of fog hours
+ *   longest  longest run, hours
+ */
+export function yearStats(fog) {
+  if (!fog) return { hours: 0, days: 0, events: 0, longest: 0 }
+  let hours = 0, days = 0, events = 0, longest = 0, run = 0, dayHas = false
+  for (let i = 0; i < fog.length; i++) {
+    const on = fog.charCodeAt(i) !== 48
+    if (on) {
+      hours++
+      if (run === 0) events++
+      run++
+      if (run > longest) longest = run
+      dayHas = true
+    } else run = 0
+    if (i % 24 === 23) { if (dayHas) days++; dayHas = false }
+  }
+  return { hours, days, events, longest }
+}
+
+/** Desiccant status for one calendar year, for the stat row. */
+export function desiccantStatus(r, yearIndex) {
+  const y0 = yearIndex * HOURS_PER_YEAR
+  const y1 = y0 + HOURS_PER_YEAR
+  if (r.lb === 0) return { value: 'None', sub: 'no desiccant fitted' }
+  if (r.full_hour === null || r.full_hour >= y1) return { value: 'Working', sub: 'all year' }
+  if (r.full_hour >= y0) {
+    const p = hourParts(r.full_hour)
+    return { value: `Full ${MONTH_SHORT[p.month]} ${p.day}`, sub: `after ${formatDays(r.full_hour)}` }
+  }
+  return { value: 'Full', sub: `since year ${hourParts(r.full_hour).year}` }
 }

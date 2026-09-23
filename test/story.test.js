@@ -167,8 +167,8 @@ import { headlineCards } from '../shared/story.js'
 test('boxes: fills, then fogs', () => {
   const r = run({ full_hour: 3940, first_fog_hour: Y + 800, hours_run: 2 * Y, years: [{ fog_hours: 0, fog: null }, { fog_hours: 100, fog: fogYear(800, 900) }] })
   const [a, b, c] = headlineCards(r)
-  assert.deepEqual(a, { key: 'life', tone: 'dry', label: 'Desiccant keeps the cavity dry for', value: '5.4 months', detail: 'Full on June 14, year 1' })
-  assert.deepEqual(b, { key: 'first', tone: 'fog', label: 'First visible fog', value: 'February 3', detail: 'Year 2, after the desiccant is full' })
+  assert.deepEqual(a, { key: 'life', tone: 'dry', label: 'Desiccant keeps the cavity dry for', value: '164 days', detail: 'Full on June 14, year 1 (5.4 months)' })
+  assert.deepEqual(b, { key: 'first', tone: 'fog', label: 'First visible fog', value: '398 days', detail: 'February 3, year 2' })
   assert.deepEqual(c, { key: 'amount', tone: 'fog', label: 'Fog per year once full', value: '100 hours', detail: 'Year 2, the first full year after it fills' })
 })
 
@@ -180,21 +180,46 @@ test('boxes: fills, stays clear', () => {
 
 test('boxes: fogs before full', () => {
   const [, b, c] = headlineCards(run({ full_hour: 2000, first_fog_hour: 10, hours_run: 2 * Y, years: [{ fog_hours: 5, fog: fogYear(10, 15) }, { fog_hours: 0, fog: null }] }))
-  assert.equal(b.detail, 'Year 1, before the desiccant is full')
+  assert.equal(b.label, 'First visible fog, before the desiccant is full'); assert.equal(b.value, '10 hours'); assert.equal(b.detail, 'January 1, year 1')
   assert.equal(c.label, 'Fog per year once full'); assert.equal(c.value, '0 hours'); assert.equal(c.tone, 'none')
 })
 
 test('boxes: never full', () => {
   const [a, b, c] = headlineCards(run({ capped: true, hours_run: 20 * Y, years: Array.from({ length: 20 }, () => ({ fog_hours: 0 })) }))
-  assert.equal(a.value, '20+ years'); assert.equal(b.value, 'None'); assert.equal(c.tone, 'none')
+  assert.equal(a.value, '7,300+ days'); assert.equal(a.detail, 'Still working after 20 years'); assert.equal(b.value, 'None'); assert.equal(c.tone, 'none')
 })
 
 test('boxes: no desiccant, single year wording', () => {
   const [a, b, c] = headlineCards(run({ lb: 0, first_fog_hour: 40 * 24, hours_run: 2 * Y, years: [{ fog_hours: 12, fog: fogYear(960, 972) }, { fog_hours: 15, fog: fogYear(900, 915) }] }))
   assert.equal(a.value, 'None'); assert.equal(a.tone, 'none')
-  assert.equal(b.value, 'February 10'); assert.equal(b.detail, 'Without desiccant')
+  assert.equal(b.value, '40 days'); assert.equal(b.detail, 'February 10, year 1')
   assert.equal(c.label, 'Fog per year'); assert.equal(c.value, '15 hours')      // the settled year 2, not year 1
   assert.equal(c.detail, 'Year 2, a settled year without desiccant')
   const clear = headlineCards(run({ lb: 0 }))
   assert.equal(clear[1].detail, 'Clear all year'); assert.equal(clear[2].detail, 'The pane stays clear')
+})
+
+test('days formatting', async () => {
+  const { formatDays } = await import('../shared/story.js')
+  assert.equal(formatDays(9349), '390 days')          // 389.5 days rounds up
+  assert.equal(formatDays(6149), '256 days')
+  assert.equal(formatDays(24), '1 day')
+  assert.equal(formatDays(10), '10 hours')
+})
+
+test('year statistics: hours, days, events, longest', async () => {
+  const { yearStats } = await import('../shared/story.js')
+  assert.deepEqual(yearStats(null), { hours: 0, days: 0, events: 0, longest: 0 })
+  // two events: hours 22..25 (spans a midnight, 4 h) and 100..101 (2 h)
+  const s = '0'.repeat(22) + '1111' + '0'.repeat(74) + '11' + '0'.repeat(8760 - 102)
+  assert.deepEqual(yearStats(s), { hours: 6, days: 3, events: 2, longest: 4 })
+})
+
+test('desiccant status per year', async () => {
+  const { desiccantStatus } = await import('../shared/story.js')
+  const r = run({ full_hour: 3940, hours_run: 2 * Y, years: [{ fog_hours: 0 }, { fog_hours: 0 }] })
+  assert.deepEqual(desiccantStatus(r, 0), { value: 'Full Jun 14', sub: 'after 164 days' })
+  assert.deepEqual(desiccantStatus(r, 1), { value: 'Full', sub: 'since year 1' })
+  assert.deepEqual(desiccantStatus(run({ capped: true }), 0), { value: 'Working', sub: 'all year' })
+  assert.equal(desiccantStatus(run({ lb: 0 }), 0).value, 'None')
 })

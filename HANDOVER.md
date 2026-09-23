@@ -1,6 +1,6 @@
 # HANDOVER: 277 Park cavity fog outlook
 
-Last session: 2026-09-23 (session 1). State: v1.4.0. Repo
+Last session: 2026-09-23 (session 1). State: v1.5.0. Repo
 StephanBK/park277-desiccant (Stephan's personal account, not INOVUES-APPS),
 local clone ~/Documents/park277-desiccant. v1.3.0 deployed on Railway
 (main fdb261f) against the fixed engine (desiccant_life- main c20a557);
@@ -16,6 +16,28 @@ v1.4.0 delivered as a patch.
    variables needed.
 If the engine lacks the fog map, the page shows "The simulation did not
 run" with the detail "engine returned no fog map": by design, not a crash.
+
+## v1.5.0 (same day): design pass for Anas
+
+- Boxes 1 and 2 in the same unit, days, with the date smaller below
+  (Stephan: first visible fog in days). Default: 256 days (full September
+  14, 8.4 months), first fog 390 days (January 25, year 2).
+- Fog is water blue everywhere (boxes, drawing, calendar); amber read as
+  heat or danger. Teal stays "desiccant working", light grey "no fog".
+- Calendar redesigned after the reference Stephan posted (study PDF page):
+  one numbered panel per year, a stat row (fog hours, days with fog, fog
+  events = unbroken runs, longest event, desiccant status), a 365 x 24
+  cell grid with 1 px gaps, months on top, 00:00 to 18:00 on the left,
+  square legend. Cell gaps drop on phones (under 3 device px per day);
+  month initials under 520 px; marker labels flip by their own width.
+- Finding shown by the stats: the VIG winter fog is few, very long events
+  (default year 2: 3 events, longest 1,306 h, about 54 days).
+- Pound conversion verified: 1 lb = 453.59237 g exactly; 8 lb = 3,628.739 g
+  (engine echo identical, 762 g water capacity); literal-value test added.
+- FLAG, not acted on: 8 lb of 3A is 5.2 L (bulk 0.70 g/mL). A 0.6 x 0.6 in
+  channel around the whole 60 x 96 in perimeter holds 312 in x 0.36 in2 =
+  112 in3 = 1.84 L, about 2.8 lb. Above ~3 lb may not physically fit a
+  0.6 in cavity; the slider still goes to 8 lb.
 
 ## v1.4.0 (same day): drawer text after the engine fix
 

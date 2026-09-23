@@ -5,21 +5,7 @@ import { fetchConfig, peek, queryOf, readUrlScenario, runScenario, writeUrlScena
 import Assumptions from './Assumptions.jsx'
 import Cavity from './Cavity.jsx'
 import { DesiccantSlider, dewPointF, GlassPicker, RoomSliders, SealLadder } from './Controls.jsx'
-import FogCalendar from './FogCalendar.jsx'
-
-function Legend() {
-  return (
-    <div className="legend">
-      <span className="key"><i className="sw dry" />Desiccant working, fading as it fills</span>
-      <span className="key"><i className="sw clear" />Clear</span>
-      <span className="key"><i className="sw fog" />Fog, light to heavy</span>
-      <p className="legend-note">
-        Each column is a day, each row an hour of that day, midnight at the top. Year 1 starts with installation on January 1.
-        Hover the calendar for any hour.
-      </p>
-    </div>
-  )
-}
+import FogCalendar, { Legend } from './FogCalendar.jsx'
 
 function ErrorPanel({ error, onRetry }) {
   const detail = Array.isArray(error.detail) ? error.detail : error.detail ? [String(typeof error.detail === 'object' ? JSON.stringify(error.detail) : error.detail)] : []

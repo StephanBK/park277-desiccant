@@ -154,3 +154,11 @@ test('the matched site is reported with the result', async () => {
   const out = await c.run(DEFAULTS)
   assert.match(out.engine.site, /10172/)
 })
+
+test('pounds to grams against independent literal values', () => {
+  // 1 lb = 453.59237 g exactly (international pound, 1959)
+  const expect = { 0: 0, 1: 453.592, 3: 1360.777, 4: 1814.369, 8: 3628.739 }
+  for (const [lb, g] of Object.entries(expect)) {
+    assert.equal(engineParams({ ...DEFAULTS, lb: Number(lb) }).grams, g, `${lb} lb`)
+  }
+})
