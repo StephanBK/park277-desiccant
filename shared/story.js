@@ -153,3 +153,49 @@ export function remainingOnDay(loadingPct, fullPct = 95) {
   if (loadingPct === undefined || loadingPct === null) return 0
   return Math.max(0, Math.min(1, 1 - loadingPct / fullPct))
 }
+
+/**
+ * The three result boxes at the top of the page:
+ *   1. how long the desiccant keeps the cavity dry   (teal)
+ *   2. first visible fog                             (amber, or neutral if none)
+ *   3. how much fog                                  (amber, or neutral if none)
+ * Each: { key, tone: 'dry' | 'fog' | 'none', label, value, detail }.
+ */
+export function headlineCards(r) {
+  const multi = r.hours_run > HOURS_PER_YEAR
+  const total = r.years.reduce((s, y) => s + y.fog_hours, 0)
+  const fog = r.first_fog_hour
+  const full = r.full_hour
+  const yearOf = (h) => `Year ${hourParts(h).year}`
+
+  // 1. Desiccant life
+  let life
+  if (r.lb === 0) life = { tone: 'none', label: 'Desiccant', value: 'None', detail: 'Seals and room air alone' }
+  else if (full === null) life = { tone: 'dry', label: 'Desiccant keeps the cavity dry for', value: `${r.max_years}+ years`, detail: 'Still working at the end of the run' }
+  else life = { tone: 'dry', label: 'Desiccant keeps the cavity dry for', value: formatDuration(full), detail: `Full on ${formatDate(full, multi)}` }
+
+  // 2. First visible fog
+  let first
+  if (fog === null) {
+    first = { tone: 'none', label: 'First visible fog', value: 'None', detail: r.lb === 0 ? 'Clear all year' : `Clear through the ${formatDuration(r.hours_run)} shown` }
+  } else {
+    let when
+    if (r.lb === 0) when = 'Without desiccant'
+    else if (full === null || fog < full) when = `${multi ? `${yearOf(fog)}, b` : 'B'}efore the desiccant is full`
+    else when = `${multi ? `${yearOf(fog)}, a` : 'A'}fter the desiccant is full`
+    first = { tone: 'fog', label: 'First visible fog', value: formatDate(fog, false), detail: when }
+  }
+
+  // 3. Amount of fog
+  let amount
+  if (r.lb === 0) {
+    amount = { tone: total ? 'fog' : 'none', label: 'Fog in a year', value: formatHours(total), detail: total ? 'Hours with a visible film' : 'The pane stays clear' }
+  } else if (full !== null && (fog === null || fog >= full)) {
+    const after = fogHoursFrom(r.years, full)
+    amount = { tone: after ? 'fog' : 'none', label: 'Fog once the desiccant is full', value: formatHours(after), detail: `Over the next ${formatDuration(r.hours_run - full)}` }
+  } else {
+    amount = { tone: total ? 'fog' : 'none', label: 'Fog in the run', value: formatHours(total), detail: `Over the ${formatDuration(r.hours_run)} shown` }
+  }
+
+  return [{ key: 'life', ...life }, { key: 'first', ...first }, { key: 'amount', ...amount }]
+}

@@ -157,3 +157,41 @@ test('coalescer shares one promise and forgets it afterwards, even on failure', 
   await assert.rejects(once('x', async () => { throw new Error('boom') }))
   assert.equal(await once('x', async () => 7), 7)
 })
+
+// ------------------------------------------------------------ headline boxes
+
+import { headlineCards } from '../shared/story.js'
+
+test('boxes: fills, then fogs', () => {
+  const r = run({ full_hour: 3940, first_fog_hour: Y + 800, hours_run: 2 * Y, years: [{ fog_hours: 0, fog: null }, { fog_hours: 100, fog: fogYear(800, 900) }] })
+  const [a, b, c] = headlineCards(r)
+  assert.deepEqual(a, { key: 'life', tone: 'dry', label: 'Desiccant keeps the cavity dry for', value: '5.4 months', detail: 'Full on June 14, year 1' })
+  assert.deepEqual(b, { key: 'first', tone: 'fog', label: 'First visible fog', value: 'February 3', detail: 'Year 2, after the desiccant is full' })
+  assert.deepEqual(c, { key: 'amount', tone: 'fog', label: 'Fog once the desiccant is full', value: '100 hours', detail: 'Over the next 19 months' })
+})
+
+test('boxes: fills, stays clear', () => {
+  const [, b, c] = headlineCards(run({ full_hour: 3940, hours_run: 2 * Y, years: [{ fog_hours: 0 }, { fog_hours: 0 }] }))
+  assert.equal(b.tone, 'none'); assert.equal(b.value, 'None'); assert.equal(b.detail, 'Clear through the 2 years shown')
+  assert.equal(c.tone, 'none'); assert.equal(c.value, '0 hours')
+})
+
+test('boxes: fogs before full', () => {
+  const [, b, c] = headlineCards(run({ full_hour: 2000, first_fog_hour: 10, hours_run: 2 * Y, years: [{ fog_hours: 5, fog: fogYear(10, 15) }, { fog_hours: 0, fog: null }] }))
+  assert.equal(b.detail, 'Year 1, before the desiccant is full')
+  assert.equal(c.label, 'Fog in the run'); assert.equal(c.value, '5 hours')
+})
+
+test('boxes: never full', () => {
+  const [a, b, c] = headlineCards(run({ capped: true, hours_run: 20 * Y, years: Array.from({ length: 20 }, () => ({ fog_hours: 0 })) }))
+  assert.equal(a.value, '20+ years'); assert.equal(b.value, 'None'); assert.equal(c.tone, 'none')
+})
+
+test('boxes: no desiccant, single year wording', () => {
+  const [a, b, c] = headlineCards(run({ lb: 0, first_fog_hour: 40 * 24, years: [{ fog_hours: 12, fog: fogYear(960, 972) }] }))
+  assert.equal(a.value, 'None'); assert.equal(a.tone, 'none')
+  assert.equal(b.value, 'February 10'); assert.equal(b.detail, 'Without desiccant')
+  assert.equal(c.label, 'Fog in a year'); assert.equal(c.value, '12 hours')
+  const clear = headlineCards(run({ lb: 0 }))
+  assert.equal(clear[1].detail, 'Clear all year'); assert.equal(clear[2].detail, 'The pane stays clear')
+})

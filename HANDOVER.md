@@ -1,7 +1,16 @@
 # HANDOVER: 277 Park cavity fog outlook
 
-Last session: 2026-09-23 (session 1, two passes). State: v1.1.0 built,
+Last session: 2026-09-23 (session 1, two passes). State: v1.2.0 built,
 tested end-to-end against the patched engine running locally; not yet deployed.
+
+## v1.2.0 (same day): result boxes on top
+
+- Stephan: make the callouts on top more pronounced, in a box. The answer
+  sentence became three boxes (shared/story.js headlineCards, tested for
+  every case): desiccant life (teal), first visible fog (amber), fog hours
+  once full (amber); boxes turn neutral grey when there is no fog. The
+  sentence stays as a screen-reader live region. Stephan: "overall we are
+  moving in the right direction".
 
 ## v1.1.0 (same day): cavity in the middle, light theme
 

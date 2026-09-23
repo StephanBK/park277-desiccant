@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { GLASSES, SEALS_EXISTING, SEALS_RETROFIT } from '../../shared/scenario.js'
-import { summarize } from '../../shared/story.js'
+import { headlineCards, summarize } from '../../shared/story.js'
 import { fetchConfig, peek, queryOf, readUrlScenario, runScenario, writeUrlScenario } from './api.js'
 import Assumptions from './Assumptions.jsx'
 import Cavity from './Cavity.jsx'
@@ -103,7 +103,16 @@ export default function App() {
           {!error && !r && <div className="sk-line wide" aria-hidden="true" />}
           {r && (
             <>
-              <p className="answer" aria-live="polite">{sentences.join(' ')}</p>
+              <p className="sr-only" aria-live="polite">{sentences.join(' ')}</p>
+              <div className="cards" aria-hidden="true">
+                {headlineCards(r).map((c) => (
+                  <div key={c.key} className={`card ${c.tone}`}>
+                    <span className="card-label">{c.label}</span>
+                    <span className="card-value">{c.value}</span>
+                    <span className="card-detail">{c.detail}</span>
+                  </div>
+                ))}
+              </div>
               <p className="basis">Simulated hour by hour over {years === 1 ? 'one year' : `${years} years`} of typical weather at the site.</p>
             </>
           )}

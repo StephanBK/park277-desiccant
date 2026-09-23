@@ -75,12 +75,24 @@ h1, h2, h3, p { margin: 0; }
 .busy { opacity: 0.5; transition: opacity 200ms; }
 .answer-block, .results { transition: opacity 200ms; }
 
-.answer-block { max-width: 60rem; margin: 0 auto 28px; text-align: center; }
-.answer {
-  font-size: clamp(20px, 1.9vw, 26px); font-stretch: 112%; font-weight: 440; line-height: 1.35;
-  letter-spacing: -0.005em; text-wrap: balance;
+.answer-block { margin: 0 auto 30px; text-align: center; }
+.basis { color: var(--ink-3); font-size: 13px; margin-top: 10px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* the three result boxes: tinted by meaning, a heavy top rule in the same colour */
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: left; }
+.card {
+  display: flex; flex-direction: column; gap: 2px; padding: 16px 20px 18px;
+  border: 1px solid var(--line); border-top: 5px solid var(--ink-3); border-radius: 4px; background: var(--surface);
 }
-.basis { color: var(--ink-3); font-size: 13px; margin-top: 8px; }
+.card.dry { background: var(--teal-soft); border-color: #b5dfe6; border-top-color: var(--teal); }
+.card.fog { background: var(--fog-soft); border-color: #f2cfb0; border-top-color: var(--fog); }
+.card-label { font-size: 13.5px; color: var(--ink-2); }
+.card-value { font-size: clamp(28px, 2.9vw, 40px); font-weight: 600; font-stretch: 115%; letter-spacing: -0.015em; line-height: 1.12; color: var(--ink); }
+.card.dry .card-value { color: var(--teal-ink); }
+.card.fog .card-value { color: var(--fog-ink); }
+.card.none .card-value { color: var(--ink-2); }
+.card-detail { font-size: 13.5px; color: var(--ink-2); }
 
 /* ------------------------------------------------------------ the rig: controls around the cavity */
 .rig {
@@ -225,7 +237,7 @@ input[type='range']::-moz-range-thumb { width: 12px; height: 12px; border-radius
   border-radius: 3px; background: linear-gradient(90deg, var(--line-soft) 0%, var(--surface) 50%, var(--line-soft) 100%);
   background-size: 200% 100%; animation: shimmer 1.6s linear infinite;
 }
-.sk-line { height: 30px; width: 70%; margin: 0 auto; }
+.sk-line { height: 112px; width: 100%; margin: 0 auto; }
 .sk-strip { height: 160px; margin-top: 18px; }
 @keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 .error { text-align: left; max-width: 640px; margin: 0 auto; border: 1px solid var(--fog); border-radius: var(--r); padding: 22px 24px; background: var(--surface); }
@@ -266,6 +278,8 @@ input[type='range']::-moz-range-thumb { width: 12px; height: 12px; border-radius
   .title p, .brand .word { display: none; }
   .page { padding: 22px 16px 40px; }
   .answer-block { text-align: left; }
+  .cards { grid-template-columns: 1fr; gap: 10px; }
+  .card { padding: 12px 16px 14px; }
   .rig { grid-template-columns: 1fr; gap: 26px; }
   .under { grid-template-columns: 1fr; gap: 22px; }
   .rig [data-tip]::after { display: none; }
