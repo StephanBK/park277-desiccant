@@ -1,6 +1,6 @@
 # HANDOVER: 277 Park cavity fog outlook
 
-Last session: 2026-09-23 (session 1). State: v1.6.0. Repo
+Last session: 2026-09-23 (session 1). State: v1.7.0. Repo
 StephanBK/park277-desiccant (Stephan's personal account, not INOVUES-APPS),
 local clone ~/Documents/park277-desiccant. v1.3.0 deployed on Railway
 (main fdb261f) against the fixed engine (desiccant_life- main c20a557);
@@ -16,6 +16,17 @@ v1.4.0 delivered as a patch.
    variables needed.
 If the engine lacks the fog map, the page shows "The simulation did not
 run" with the detail "engine returned no fog map": by design, not a crash.
+
+## v1.7.0 (same day): fog days instead of fog hours
+
+- Stephan: fog DAYS at the top, fog hours removed from the year panels.
+  Third box: "Fog days per year (once full)" = days with at least one hour
+  of visible fog in the last simulated year (story.js fogDaysPerYear);
+  sentence and drawing chip in days too. All three boxes are now days:
+  default 256 days dry, first fog 390 days, 63 fog days a year once full
+  (matches the Year 2 panel's "Days with fog 63").
+- Year panels: 4 stats (days with fog, fog events, longest event,
+  desiccant); 2 x 2 below 900 px.
 
 ## v1.6.0 (same day): working-hours toggle on the calendar
 

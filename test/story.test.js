@@ -51,7 +51,7 @@ test('fills, then fogs in the next winter', () => {
   const r = run({ full_hour: 3940, first_fog_hour: Y + 800, hours_run: 2 * Y, years: [{ fog_hours: 0, fog: null }, { fog_hours: 100, fog: fogYear(800, 900) }] })
   const s = summarize(r)
   assert.equal(s[0], 'The desiccant keeps the cavity dry for 5.4 months, until June 14, year 1.')
-  assert.equal(s[1], 'Once it is full, the pane fogs about 100 hours a year, starting February 3, year 2.')
+  assert.equal(s[1], 'Once it is full, the pane fogs on about 5 days a year, starting February 3, year 2.')   // hours 800-899 = days 33-37
 })
 
 test('fills, stays clear', () => {
@@ -64,7 +64,7 @@ test('fogs before full', () => {
   assert.match(s[0], /first fogs on January 1, year 1, before the desiccant is full/)
   assert.equal(s.length, 2)                       // clear once settled: no "about 0 hours" sentence
   const t = summarize(run({ full_hour: 2000, first_fog_hour: 10, hours_run: 2 * Y, years: [{ fog_hours: 5, fog: fogYear(10, 15) }, { fog_hours: 40, fog: fogYear(0, 40) }] }))
-  assert.equal(t[2], 'It fogs about 40 hours a year once it is full.')
+  assert.equal(t[2], 'It fogs on about 2 days a year once it is full.')                 // hours 0-39 = days 0-1
 })
 
 test('never fills in 20 years', () => {
@@ -75,7 +75,7 @@ test('never fills in 20 years', () => {
 test('no desiccant', () => {
   assert.deepEqual(summarize(run({ lb: 0 })), ['Without desiccant, the pane stays clear all year.'])
   const s = summarize(run({ lb: 0, first_fog_hour: 40 * 24, hours_run: 2 * Y, years: [{ fog_hours: 1, fog: fogYear(960, 961) }, { fog_hours: 3, fog: fogYear(900, 903) }] }))
-  assert.deepEqual(s, ['Without desiccant, the pane fogs about 3 hours a year.', 'The first fog comes on February 10, year 1.'])
+  assert.deepEqual(s, ['Without desiccant, the pane fogs on about 1 day a year.', 'The first fog comes on February 10, year 1.'])
 })
 
 test('fog hours after full count only from the fill hour', () => {
@@ -169,19 +169,19 @@ test('boxes: fills, then fogs', () => {
   const [a, b, c] = headlineCards(r)
   assert.deepEqual(a, { key: 'life', tone: 'dry', label: 'Desiccant keeps the cavity dry for', value: '164 days', detail: 'Full on June 14, year 1 (5.4 months)' })
   assert.deepEqual(b, { key: 'first', tone: 'fog', label: 'First visible fog', value: '398 days', detail: 'February 3, year 2' })
-  assert.deepEqual(c, { key: 'amount', tone: 'fog', label: 'Fog per year once full', value: '100 hours', detail: 'Year 2, the first full year after it fills' })
+  assert.deepEqual(c, { key: 'amount', tone: 'fog', label: 'Fog days per year once full', value: '5 days', detail: 'Year 2, the first full year after it fills' })
 })
 
 test('boxes: fills, stays clear', () => {
   const [, b, c] = headlineCards(run({ full_hour: 3940, hours_run: 2 * Y, years: [{ fog_hours: 0 }, { fog_hours: 0 }] }))
   assert.equal(b.tone, 'none'); assert.equal(b.value, 'None'); assert.equal(b.detail, 'Clear through the 2 years shown')
-  assert.equal(c.tone, 'none'); assert.equal(c.value, '0 hours')
+  assert.equal(c.tone, 'none'); assert.equal(c.value, '0 days')
 })
 
 test('boxes: fogs before full', () => {
   const [, b, c] = headlineCards(run({ full_hour: 2000, first_fog_hour: 10, hours_run: 2 * Y, years: [{ fog_hours: 5, fog: fogYear(10, 15) }, { fog_hours: 0, fog: null }] }))
   assert.equal(b.label, 'First visible fog, before the desiccant is full'); assert.equal(b.value, '10 hours'); assert.equal(b.detail, 'January 1, year 1')
-  assert.equal(c.label, 'Fog per year once full'); assert.equal(c.value, '0 hours'); assert.equal(c.tone, 'none')
+  assert.equal(c.label, 'Fog days per year once full'); assert.equal(c.value, '0 days'); assert.equal(c.tone, 'none')
 })
 
 test('boxes: never full', () => {
@@ -193,7 +193,7 @@ test('boxes: no desiccant, single year wording', () => {
   const [a, b, c] = headlineCards(run({ lb: 0, first_fog_hour: 40 * 24, hours_run: 2 * Y, years: [{ fog_hours: 12, fog: fogYear(960, 972) }, { fog_hours: 15, fog: fogYear(900, 915) }] }))
   assert.equal(a.value, 'None'); assert.equal(a.tone, 'none')
   assert.equal(b.value, '40 days'); assert.equal(b.detail, 'February 10, year 1')
-  assert.equal(c.label, 'Fog per year'); assert.equal(c.value, '15 hours')      // the settled year 2, not year 1
+  assert.equal(c.label, 'Fog days per year'); assert.equal(c.value, '2 days')   // year 2, hours 900-914 = days 37-38
   assert.equal(c.detail, 'Year 2, a settled year without desiccant')
   const clear = headlineCards(run({ lb: 0 }))
   assert.equal(clear[1].detail, 'Clear all year'); assert.equal(clear[2].detail, 'The pane stays clear')

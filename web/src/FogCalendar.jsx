@@ -113,7 +113,6 @@ function YearPanel({ r, index, width, progress, multi, workingOnly }) {
   const H = 24 * ROW
   const year = r.years[index]
   const st = yearStats(year.fog, workingOnly)
-  const poolH = workingOnly ? WORKING_HOURS.hours : HOURS_PER_YEAR
   const poolD = workingOnly ? WORKING_HOURS.days : DAYS
   const des = desiccantStatus(r, index)
 
@@ -144,8 +143,6 @@ function YearPanel({ r, index, width, progress, multi, workingOnly }) {
         <h3><span className="ynum">{String(index + 1).padStart(2, '0')}</span>Year {index + 1}</h3>
       </header>
       <div className="ystats">
-        <Stat label={workingOnly ? 'Fog hours, working' : 'Fog hours'} value={st.hours.toLocaleString('en-US')}
-          sub={`${((100 * st.hours) / poolH).toFixed(1)} % of ${poolH.toLocaleString('en-US')} ${workingOnly ? 'working hours' : 'hours'}`} tone={st.hours ? 'fog' : ''} />
         <Stat label={workingOnly ? 'Working days with fog' : 'Days with fog'} value={st.days}
           sub={`${((100 * st.days) / poolD).toFixed(1)} % of ${workingOnly ? `${poolD} working days` : 'the year'}`} tone={st.days ? 'fog' : ''} />
         <Stat label="Fog events" value={st.events} sub={st.events ? `avg ${Math.round(st.hours / st.events)} h each` : 'none'} />
@@ -165,7 +162,7 @@ function YearPanel({ r, index, width, progress, multi, workingOnly }) {
           </div>
           <div className="ycanvas" style={{ height: H }}>
             <canvas ref={canvas} style={{ width, height: H }} onPointerMove={onMove} onPointerLeave={() => setHover(null)}
-              role="img" aria-label={`Year ${index + 1}: ${st.hours} fog hours on ${st.days} days${workingOnly ? ', working hours only' : ''}`} />
+              role="img" aria-label={`Year ${index + 1}: fog on ${st.days} ${workingOnly ? 'working days' : 'days'}, ${st.events} fog events`} />
             {fullHere && <span className="yline full" style={{ left: xOf(r.full_hour) }} />}
             {hover && (
               <>

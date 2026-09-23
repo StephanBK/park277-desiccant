@@ -1,4 +1,4 @@
-import { formatDays, fogPerYear } from '../../shared/story.js'
+import { fogDaysPerYear, formatDays, yearStats } from '../../shared/story.js'
 
 // Section through the window, outside on the left, room on the right.
 // Not to scale: the 0.6 in cavity is drawn wide so its contents read.
@@ -62,13 +62,13 @@ function Chip({ x, y, text, tone, anchor = 'start' }) {
 
 export function fogChip(r) {
   if (!r) return null
-  const perYear = fogPerYear(r)
-  const total = r.years.reduce((s, y) => s + y.fog_hours, 0)
+  const perYear = fogDaysPerYear(r)
+  const total = r.years.reduce((s, y) => s + yearStats(y.fog).days, 0)
   if (total === 0) return 'Pane stays clear'
-  if (perYear === 0) return `${total.toLocaleString('en-US')} h of fog, then clear`
+  if (perYear === 0) return `${total.toLocaleString('en-US')} fog days, then clear`
   const n = perYear.toLocaleString('en-US')
-  if (r.lb > 0 && r.full_hour !== null) return `${n} h/yr of fog once full`
-  return `${n} h/yr of fog`
+  if (r.lb > 0 && r.full_hour !== null) return `${n} fog days/yr once full`
+  return `${n} fog days/yr`
 }
 
 export function dryChip(r) {

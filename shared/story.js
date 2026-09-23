@@ -96,6 +96,15 @@ export function fogPerYear(r) {
   return r.years.length ? r.years[r.years.length - 1].fog_hours : 0
 }
 
+/** Days with at least one hour of visible fog, in the same year as fogPerYear. */
+export function fogDaysPerYear(r) {
+  return r.years.length ? yearStats(r.years[r.years.length - 1].fog).days : 0
+}
+
+export function formatDayCount(n) {
+  return `${n.toLocaleString('en-US')} ${n === 1 ? 'day' : 'days'}`
+}
+
 /**
  * The one-paragraph answer, as a list of sentences.
  * r: { lb, full_hour, first_fog_hour, capped, hours_run, max_years, years: [{ fog_hours, fog }] }
@@ -105,10 +114,10 @@ export function summarize(r) {
   const date = (h) => formatDate(h, multi)
   const total = r.years.reduce((s, y) => s + y.fog_hours, 0)
 
-  const perYear = fogPerYear(r)
+  const perYear = fogDaysPerYear(r)
   if (r.lb === 0) {
     if (r.first_fog_hour === null) return ['Without desiccant, the pane stays clear all year.']
-    return [`Without desiccant, the pane fogs about ${formatHours(perYear)} a year.`, `The first fog comes on ${date(r.first_fog_hour)}.`]
+    return [`Without desiccant, the pane fogs on about ${formatDayCount(perYear)} a year.`, `The first fog comes on ${date(r.first_fog_hour)}.`]
   }
 
   const full = r.full_hour
@@ -119,13 +128,13 @@ export function summarize(r) {
 
   if (fog !== null && (full === null || fog < full)) {
     const out = [`The pane first fogs on ${date(fog)}, before the desiccant is full.`, life]
-    if (perYear) out.push(`It fogs about ${formatHours(perYear)} a year ${full === null ? 'while the desiccant works' : 'once it is full'}.`)
+    if (perYear) out.push(`It fogs on about ${formatDayCount(perYear)} a year ${full === null ? 'while the desiccant works' : 'once it is full'}.`)
     return out
   }
   if (full === null) return [life, 'The pane stays clear.']
   const after = r.hours_run - full
   if (fog === null) return [life, `After that the pane still stays clear through the ${formatDuration(after)} shown.`]
-  return [life, `Once it is full, the pane fogs about ${formatHours(perYear)} a year, starting ${date(fog)}.`]
+  return [life, `Once it is full, the pane fogs on about ${formatDayCount(perYear)} a year, starting ${date(fog)}.`]
 }
 
 /**
@@ -204,17 +213,18 @@ export function headlineCards(r) {
     first = { tone: 'fog', label, value: formatDays(fog), detail: formatDate(fog, multi) }
   }
 
-  // 3. Fog in one year (always the same unit, so cases compare fairly)
-  const perYear = fogPerYear(r)
+  // 3. Fog DAYS in one year (days with at least one hour of visible fog),
+  // always the last simulated year, so cases compare fairly
+  const perYear = fogDaysPerYear(r)
   const lastYear = r.years.length
   const tone = perYear ? 'fog' : 'none'
   let amount
   if (r.lb === 0) {
-    amount = { tone, label: 'Fog per year', value: formatHours(perYear), detail: perYear ? `Year ${lastYear}, a settled year without desiccant` : 'The pane stays clear' }
+    amount = { tone, label: 'Fog days per year', value: formatDayCount(perYear), detail: perYear ? `Year ${lastYear}, a settled year without desiccant` : 'The pane stays clear' }
   } else if (full !== null) {
-    amount = { tone, label: 'Fog per year once full', value: formatHours(perYear), detail: perYear ? `Year ${lastYear}, the first full year after it fills` : 'The pane stays clear' }
+    amount = { tone, label: 'Fog days per year once full', value: formatDayCount(perYear), detail: perYear ? `Year ${lastYear}, the first full year after it fills` : 'The pane stays clear' }
   } else {
-    amount = { tone, label: 'Fog per year', value: formatHours(perYear), detail: perYear ? 'While the desiccant still works' : 'The pane stays clear' }
+    amount = { tone, label: 'Fog days per year', value: formatDayCount(perYear), detail: perYear ? 'While the desiccant still works' : 'The pane stays clear' }
   }
 
   return [{ key: 'life', ...life }, { key: 'first', ...first }, { key: 'amount', ...amount }]
