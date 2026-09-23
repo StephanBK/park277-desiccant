@@ -60,15 +60,17 @@ function Chip({ x, y, text, tone, anchor = 'start' }) {
   )
 }
 
-export function fogChip(r) {
+export function fogChip(r, working = false) {
   if (!r) return null
-  const perYear = fogDaysPerYear(r)
-  const total = r.years.reduce((s, y) => s + yearStats(y.fog).days, 0)
-  if (total === 0) return 'Pane stays clear'
-  if (perYear === 0) return `${total.toLocaleString('en-US')} fog days, then clear`
+  const perYear = fogDaysPerYear(r, working)
+  const total = r.years.reduce((s, y) => s + yearStats(y.fog, working).days, 0)
+  const noun = working ? 'working fog days' : 'fog days'
+  if (total === 0) return working ? 'Clear in working hours' : 'Pane stays clear'
+  if (perYear === 0) return `${total.toLocaleString('en-US')} ${noun}, then clear`
   const n = perYear.toLocaleString('en-US')
-  if (r.lb > 0 && r.full_hour !== null) return `${n} fog days/yr once full`
-  return `${n} fog days/yr`
+  if (working) return `${n} ${noun}/yr`                       // shorter: the box carries "once full"
+  if (r.lb > 0 && r.full_hour !== null) return `${n} ${noun}/yr once full`
+  return `${n} ${noun}/yr`
 }
 
 export function dryChip(r) {
@@ -77,7 +79,7 @@ export function dryChip(r) {
   return `Dry for ${formatDays(r.full_hour)}`
 }
 
-export default function Cavity({ scenario, sealRanks, result, busy, dewF, glassLabel }) {
+export default function Cavity({ scenario, sealRanks, result, busy, dewF, glassLabel, working = false }) {
   const build = BUILD[scenario.glass]
   const retroEnd = RETRO_X + build.panes[build.panes.length - 1][1]
   const frameL = PANE_X - 12
@@ -94,7 +96,7 @@ export default function Cavity({ scenario, sealRanks, result, busy, dewF, glassL
 
   const fogHours = result ? result.years.reduce((s, y) => s + y.fog_hours, 0) : 0
   const fogStrength = Math.min(1, fogHours / 1500)
-  const fogText = fogChip(result)
+  const fogText = fogChip(result, working)
   const dryText = dryChip(result)
 
   return (

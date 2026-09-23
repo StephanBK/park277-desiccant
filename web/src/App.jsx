@@ -60,7 +60,8 @@ export default function App() {
   const closeDrawer = useCallback(() => setDrawer(false), [])
 
   const r = error ? null : data?.result
-  const sentences = r ? summarize(r) : []
+  const workingView = hours === 'working'
+  const sentences = r ? summarize(r, { working: workingView }) : []
   const years = r?.years_run ?? 0
   const ranks = {
     out: SEALS_EXISTING.findIndex((s) => s.key === scenario.seal_out),
@@ -93,7 +94,7 @@ export default function App() {
             <>
               <p className="sr-only" aria-live="polite">{sentences.join(' ')}</p>
               <div className="cards" aria-hidden="true">
-                {headlineCards(r).map((c) => (
+                {headlineCards(r, { working: workingView }).map((c) => (
                   <div key={c.key} className={`card ${c.tone}`}>
                     <span className="card-label">{c.label}</span>
                     <span className="card-value">{c.value}</span>
@@ -113,7 +114,7 @@ export default function App() {
           </div>
 
           <div className="center">
-            <Cavity scenario={scenario} sealRanks={ranks} result={r} busy={busy} glassLabel={glassLabel}
+            <Cavity scenario={scenario} sealRanks={ranks} result={r} busy={busy} glassLabel={glassLabel} working={workingView}
               dewF={dewPointF(scenario.t, scenario.rh)} />
             <div className="under">
               <GlassPicker value={scenario.glass} onPick={(k) => update({ glass: k })} />
@@ -141,7 +142,7 @@ export default function App() {
               </div>
               <p className="hours-note">
                 {hours === 'working'
-                  ? `Working hours: ${WORKING_HOURS.label} (${WORKING_HOURS.hours.toLocaleString('en-US')} hours a year). The boxes at the top count all hours.`
+                  ? `Working hours: ${WORKING_HOURS.label} (${WORKING_HOURS.hours.toLocaleString('en-US')} hours a year). The fog-days box at the top follows this setting.`
                   : 'Every hour of the year counts.'}
               </p>
             </div>

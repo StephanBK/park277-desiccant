@@ -243,3 +243,23 @@ test('year statistics in working hours only', async () => {
   assert.deepEqual(yearStats(s), { hours: 48, days: 2, events: 2, longest: 24 })
   assert.deepEqual(yearStats(s, true), { hours: 10, days: 1, events: 1, longest: 10 })   // Saturday excluded
 })
+
+test('fog-days box and sentence follow the working-hours view', () => {
+  // year 2: fog all of Monday Jan 1 and all of Saturday Jan 6 -> 2 fog days, 1 working day
+  const y2 = '1'.repeat(24) + '0'.repeat(4 * 24) + '1'.repeat(24) + '0'.repeat(8760 - 6 * 24)
+  const r = run({ full_hour: 3940, first_fog_hour: Y, hours_run: 2 * Y, years: [{ fog_hours: 0, fog: null }, { fog_hours: 48, fog: y2 }] })
+  const all = headlineCards(r)[2]
+  const work = headlineCards(r, { working: true })[2]
+  assert.equal(all.label, 'Fog days per year once full'); assert.equal(all.value, '2 days')
+  assert.equal(work.label, 'Working days with fog per year once full'); assert.equal(work.value, '1 day')
+  assert.equal(work.detail, 'Year 2, the first full year after it fills, out of 261 working days')
+  assert.match(summarize(r, { working: true })[1], /about 1 working day a year/)
+  assert.match(summarize(r)[1], /about 2 days a year/)
+})
+
+test('box 1 adds months only when they add information', () => {
+  const short = headlineCards(run({ full_hour: 13 * 24, hours_run: 2 * Y, years: [{ fog_hours: 0 }, { fog_hours: 0 }] }))[0]
+  assert.equal(short.value, '13 days'); assert.equal(short.detail, 'Full on January 14, year 1')
+  const long = headlineCards(run({ full_hour: 6149, hours_run: 2 * Y, years: [{ fog_hours: 0 }, { fog_hours: 0 }] }))[0]
+  assert.equal(long.detail, 'Full on September 14, year 1 (8.4 months)')
+})

@@ -1,6 +1,6 @@
 # HANDOVER: 277 Park cavity fog outlook
 
-Last session: 2026-09-23 (session 1). State: v1.7.0. Repo
+Last session: 2026-09-23 (session 1). State: v1.8.0. Repo
 StephanBK/park277-desiccant (Stephan's personal account, not INOVUES-APPS),
 local clone ~/Documents/park277-desiccant. v1.3.0 deployed on Railway
 (main fdb261f) against the fixed engine (desiccant_life- main c20a557);
@@ -16,6 +16,20 @@ v1.4.0 delivered as a patch.
    variables needed.
 If the engine lacks the fog map, the page shows "The simulation did not
 run" with the detail "engine returned no fog map": by design, not a crash.
+
+## v1.8.0 (same day): the fog-days box follows the working-hours toggle
+
+- Stephan: with working hours selected, the top number should show working
+  days too, to match the panels. Third box, sentence and drawing chip now
+  follow the toggle: "Working days with fog per year once full, N days,
+  out of 261 working days". Boxes 1 (desiccant life) and 2 (first visible
+  fog) stay all hours.
+- NOTE for reading: the box is always the LAST simulated year (year 2 for a
+  run that fills in year 1), so it matches the Year 2 panel, not Year 1.
+  Stephan's check scenario (VIG, freshly resealed / best certified insert,
+  8 lb, 70 F / 30 %): year 1 88 fog days (62 working), year 2 109 (77).
+- Box 1 detail adds "(8.4 months)" only when months say something the days
+  do not (no more "13 days ... (13 days)").
 
 ## v1.7.0 (same day): fog days instead of fog hours
 
@@ -37,8 +51,8 @@ run" with the detail "engine returned no fog map": by design, not a crash.
   story.js isWorkingHour / yearStats(fog, working).
 - Working view: off-hours cells faded out and not counted; stats become
   "% of 2,610 working hours" / "% of 261 working days"; an off hour ends a
-  fog event (so no event exceeds 10 h). The three boxes at the top always
-  count all hours (the note under the toggle says so). View kept in the
+  fog event (so no event exceeds 10 h). (From v1.8 the fog-days box at the
+  top follows the toggle; the other two boxes count all hours.) View kept in the
   link as &hours=working; never sent to the API.
 - Default, year 2: all hours 1,446 h (16.5 %); working hours 420 h (16.1 %),
   43 working days. Near-equal shares: the winter fog is one long spell.
