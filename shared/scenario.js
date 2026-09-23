@@ -2,7 +2,7 @@
 // here, once. The server imports it to validate requests and build engine
 // calls; the web page imports it to draw the controls. Change it here only.
 
-export const APP_VERSION = '1.2.0'
+export const APP_VERSION = '1.3.0'
 
 // Engine: INOVUES desiccant lifetime simulator (StephanBK/desiccant_life-).
 // Needs the 2026-09-23 fog-map API (fog_map, years_after_full).
@@ -62,6 +62,12 @@ export const FIXED = {
   sealant_out: 'silicone', sealant_in: 'silicone',
   max_years: 20,
 }
+// Where the engine's geocoder must land. "277 Park Avenue, New York, NY"
+// without the ZIP matches 277 Park Avenue in Brooklyn (11205), 7 km away;
+// the server rejects any result whose matched location is not this one.
+// 0.01 deg is about 1.1 km.
+export const EXPECTED_SITE = { zip: '10172', lat: 40.7555, lon: -73.975, tol_deg: 0.01 }
+
 // Whole years simulated after the desiccant fills, so the first winter
 // with a full desiccant is always in the picture.
 export const YEARS_AFTER_FULL = 1

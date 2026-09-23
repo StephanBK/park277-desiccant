@@ -10,7 +10,7 @@
 //   5. An engine without the fog-map API is reported as out of date.
 
 import {
-  FIXED, GLASSES, GRAMS_PER_LB, RANGES, SEALS_EXISTING, SEALS_RETROFIT, YEARS_AFTER_FULL,
+  EXPECTED_SITE, FIXED, GLASSES, GRAMS_PER_LB, RANGES, SEALS_EXISTING, SEALS_RETROFIT, YEARS_AFTER_FULL,
 } from '../shared/scenario.js'
 
 export class HttpError extends Error {
@@ -65,8 +65,10 @@ export function engineParams(s) {
   return {
     ...FIXED,
     // Without desiccant nothing ever fills, so the engine would play all
-    // max_years identical years; one year says everything.
-    max_years: s.lb === 0 ? 1 : FIXED.max_years,
+    // max_years years. Two are enough: year 1 starts from a clean pane and
+    // fresh cavity air (a start-up year, less fog); year 2 is the settled
+    // year the page reports.
+    max_years: s.lb === 0 ? 2 : FIXED.max_years,
     f_cold: glass.f_cold,
     al_out: s.seal_out,
     al_in: s.seal_in,
@@ -132,6 +134,15 @@ export function echoMismatches(sent, payload, presets) {
     const got = echo[ek]
     if (!same(expected, got)) out.push(`${k}: sent ${JSON.stringify(expected)}, engine used ${JSON.stringify(got)}`)
   }
+  // The echo proves the engine received the address; this proves its
+  // geocoder found the right building.
+  const loc = payload.location
+  if (!loc || typeof loc.lat !== 'number' || typeof loc.lon !== 'number') out.push('location: engine returned no geocoded location')
+  else {
+    const far = Math.abs(loc.lat - EXPECTED_SITE.lat) > EXPECTED_SITE.tol_deg || Math.abs(loc.lon - EXPECTED_SITE.lon) > EXPECTED_SITE.tol_deg
+    const zip = String(loc.matched_address || '').includes(EXPECTED_SITE.zip)
+    if (far || !zip) out.push(`location: engine matched "${loc.matched_address}" (${loc.lat}, ${loc.lon}), not 277 Park Avenue ${EXPECTED_SITE.zip}`)
+  }
   const fog = payload.fog
   if (!fog || !Array.isArray(fog.years)) out.push('engine returned no fog map (engine predates the 2026-09-23 fog-map API)')
   else if (fog.years_after_full !== sent.years_after_full) out.push(`years_after_full: sent ${sent.years_after_full}, engine used ${fog.years_after_full}`)
@@ -166,6 +177,8 @@ export function trimPayload(payload, scenario, sent) {
     engine: {
       version: payload.version,
       weather: payload.weather?.source || payload.weather?.label || null,
+      site: payload.location?.matched_address ?? null,
+      weather_cell: payload.weather ? [payload.weather.grid_lat, payload.weather.grid_lon] : null,
     },
   }
 }

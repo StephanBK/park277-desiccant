@@ -51,6 +51,9 @@ function lifetimePayload(q, opts) {
     years: Array.from({ length: years }, (_, i) => ({ year: i + 1, hours_visible: i === years - 1 ? 760 : 0 })),
     daily: { loading: Array.from({ length: years * 365 }, (_, d) => Math.min(0.21, d * 0.002)) },
     q_max_25: 0.21,
+    location: opts.brooklyn
+      ? { lat: 40.69609, lon: -73.96724, matched_address: '277 Park Avenue, Brooklyn, New York 11205, United States' }
+      : { lat: 40.755535, lon: -73.97495, matched_address: '277 Park Avenue, New York, New York 10172, United States' },
   }
   if (q.get('fog_map') === 'true' && !opts.noFog) {
     payload.fog = {
@@ -73,6 +76,7 @@ function response(status, body) {
  *   failFirst: n       first n lifetime calls answer 503
  *   down: true         every call throws (network error)
  *   hang: true         lifetime calls never answer (until aborted)
+ *   brooklyn: true     geocoder lands on 277 Park Avenue, Brooklyn
  */
 export function fakeEngine(opts = {}) {
   const calls = { presets: 0, lifetime: 0, urls: [] }

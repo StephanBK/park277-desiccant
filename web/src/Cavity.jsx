@@ -1,4 +1,4 @@
-import { formatDuration, fogHoursFrom } from '../../shared/story.js'
+import { formatDuration, fogPerYear } from '../../shared/story.js'
 
 // Section through the window, outside on the left, room on the right.
 // Not to scale: the 0.6 in cavity is drawn wide so its contents read.
@@ -62,13 +62,13 @@ function Chip({ x, y, text, tone, anchor = 'start' }) {
 
 export function fogChip(r) {
   if (!r) return null
+  const perYear = fogPerYear(r)
   const total = r.years.reduce((s, y) => s + y.fog_hours, 0)
   if (total === 0) return 'Pane stays clear'
-  if (r.lb === 0) return `${total.toLocaleString('en-US')} h of fog a year`
-  if (r.full_hour !== null && r.first_fog_hour >= r.full_hour) {
-    return `${fogHoursFrom(r.years, r.full_hour).toLocaleString('en-US')} h of fog once full`
-  }
-  return `${total.toLocaleString('en-US')} h of fog`
+  if (perYear === 0) return `${total.toLocaleString('en-US')} h of fog, then clear`
+  const n = perYear.toLocaleString('en-US')
+  if (r.lb > 0 && r.full_hour !== null) return `${n} h/yr of fog once full`
+  return `${n} h/yr of fog`
 }
 
 export function dryChip(r) {

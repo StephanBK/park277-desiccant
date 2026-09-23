@@ -66,8 +66,8 @@ test('engine params pin every fixed input and map the controls', () => {
   assert.equal(p.max_years, 20)
 })
 
-test('no desiccant runs one year', () => {
-  assert.equal(engineParams({ ...DEFAULTS, lb: 0 }).max_years, 1)
+test('no desiccant runs two years (year 2 is the settled one)', () => {
+  assert.equal(engineParams({ ...DEFAULTS, lb: 0 }).max_years, 2)
 })
 
 test('every parameter sent to the engine is echo-checked', () => {
@@ -142,4 +142,15 @@ test('the engine URL gets exactly the parameters built here', async () => {
   assert.equal(u.searchParams.get('rh_in'), '42')
   assert.equal(u.searchParams.get('desorption'), 'true')
   assert.equal(u.searchParams.get('al_out'), 'wet_sealed')
+})
+
+test('a geocode to the wrong building (Brooklyn) is rejected', async () => {
+  const { c } = client({ brooklyn: true })
+  await assert.rejects(c.run(DEFAULTS), (e) => e.status === 502 && e.detail.some((d) => d.startsWith('location') && d.includes('Brooklyn')))
+})
+
+test('the matched site is reported with the result', async () => {
+  const { c } = client()
+  const out = await c.run(DEFAULTS)
+  assert.match(out.engine.site, /10172/)
 })
