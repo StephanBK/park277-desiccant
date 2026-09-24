@@ -1,6 +1,6 @@
 # HANDOVER: 277 Park cavity fog outlook
 
-Last session: 2026-09-23 (session 1). State: v1.9.0. Repo
+Last session: 2026-09-23 (session 1). State: v1.10.0. Repo
 StephanBK/park277-desiccant (Stephan's personal account, not INOVUES-APPS),
 local clone ~/Documents/park277-desiccant. v1.3.0 deployed on Railway
 (main fdb261f) against the fixed engine (desiccant_life- main c20a557);
@@ -16,6 +16,17 @@ v1.4.0 delivered as a patch.
    variables needed.
 If the engine lacks the fog map, the page shows "The simulation did not
 run" with the detail "engine returned no fog map": by design, not a crash.
+
+## v1.10.0: first visible fog follows the working-hours toggle
+
+- Stephan: yes, box 2 follows the toggle too. Working view: "First visible
+  fog in working hours" = first hour with visible fog on a weekday 08:00 to
+  18:00 (story.js firstFogHour); a night or weekend fog that is gone by
+  08:00 does not count. The sentence and the calendar's first-fog marker
+  follow as well. Box 1 (desiccant life) stays all hours.
+- Year-boundary report ("no fog end of year 1, fog right at the start of
+  year 2"): not reproduced; recommended a permanent engine guard test for
+  state continuity at year boundaries, plus the exact link when it recurs.
 
 ## v1.9.0 (same day): parity with the old simulator in Odoo
 

@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
 import {
-  calendarRows, dayToDate, fogHoursFrom, formatClock, formatDate, formatDuration, hourParts,
+  calendarRows, dayToDate, formatDays, fogHoursFrom, formatClock, formatDate, formatDuration, hourParts,
   levelRangeUm, levelWord, MONTH_START_DAY, remainingOnDay, summarize,
 } from '../shared/story.js'
 import { coalescer, LruCache } from '../server/cache.js'
@@ -262,4 +262,29 @@ test('box 1 adds months only when they add information', () => {
   assert.equal(short.value, '13 days'); assert.equal(short.detail, 'Full on January 14, year 1')
   const long = headlineCards(run({ full_hour: 6149, hours_run: 2 * Y, years: [{ fog_hours: 0 }, { fog_hours: 0 }] }))[0]
   assert.equal(long.detail, 'Full on September 14, year 1 (8.4 months)')
+})
+
+test('first visible fog follows the working-hours view', async () => {
+  const { firstFogHour } = await import('../shared/story.js')
+  // year 2: Saturday Jan 6 all day (not working), Monday Jan 8 at 06:00 (too early),
+  // Tuesday Jan 9 at 10:00 (working) -> the working first fog is Jan 9, 10:00
+  const y2 = Array(8760).fill('0')
+  for (let h = 5 * 24; h < 6 * 24; h++) y2[h] = '1'
+  y2[7 * 24 + 6] = '1'
+  y2[8 * 24 + 10] = '1'
+  const fog = y2.join('')
+  const r = run({ full_hour: 3940, first_fog_hour: Y + 5 * 24, hours_run: 2 * Y, years: [{ fog_hours: 0, fog: null }, { fog_hours: 26, fog }] })
+  assert.equal(firstFogHour(r), Y + 5 * 24)
+  assert.equal(firstFogHour(r, true), Y + 8 * 24 + 10)
+  const b = headlineCards(r, { working: true })[1]
+  assert.equal(b.label, 'First visible fog in working hours')
+  assert.equal(b.value, formatDays(Y + 8 * 24 + 10))
+  assert.equal(b.detail, 'January 9, year 2')
+  assert.equal(headlineCards(r)[1].detail, 'January 6, year 2')
+  assert.match(summarize(r, { working: true })[1], /starting January 9, year 2/)
+  // no working-hours fog at all
+  const night = run({ full_hour: 3940, first_fog_hour: Y + 5 * 24, hours_run: 2 * Y,
+    years: [{ fog_hours: 0, fog: null }, { fog_hours: 24, fog: '0'.repeat(120) + '1'.repeat(24) + '0'.repeat(8760 - 144) }] })
+  assert.equal(firstFogHour(night, true), null)
+  assert.equal(headlineCards(night, { working: true })[1].value, 'None')
 })

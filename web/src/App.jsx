@@ -142,7 +142,7 @@ export default function App() {
               </div>
               <p className="hours-note">
                 {hours === 'working'
-                  ? `Working hours: ${WORKING_HOURS.label} (${WORKING_HOURS.hours.toLocaleString('en-US')} hours a year). The fog-days box at the top follows this setting.`
+                  ? `Working hours: ${WORKING_HOURS.label} (${WORKING_HOURS.hours.toLocaleString('en-US')} hours a year). The first-fog and fog-days boxes at the top follow this setting.`
                   : 'Every hour of the year counts.'}
               </p>
             </div>

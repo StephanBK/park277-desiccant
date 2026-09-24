@@ -118,12 +118,13 @@ export function summarize(r, { working = false } = {}) {
   const perYear = fogDaysPerYear(r, working)
   const days = (n) => (working ? `${formatDayCount(n).replace('day', 'working day')}` : formatDayCount(n))
   if (r.lb === 0) {
-    if (r.first_fog_hour === null) return ['Without desiccant, the pane stays clear all year.']
-    return [`Without desiccant, the pane fogs on about ${days(perYear)} a year.`, `The first fog comes on ${date(r.first_fog_hour)}.`]
+    const f0 = firstFogHour(r, working)
+    if (f0 === null) return [working ? 'Without desiccant, the pane stays clear in working hours.' : 'Without desiccant, the pane stays clear all year.']
+    return [`Without desiccant, the pane fogs on about ${days(perYear)} a year.`, `The first fog${working ? ' in working hours' : ''} comes on ${date(f0)}.`]
   }
 
   const full = r.full_hour
-  const fog = r.first_fog_hour
+  const fog = firstFogHour(r, working)
   const life = full === null
     ? `The desiccant is still working after ${r.max_years} years.`
     : `The desiccant keeps the cavity dry for ${formatDuration(full)}, until ${date(full)}.`
@@ -196,7 +197,7 @@ export function remainingOnDay(loadingPct, fullPct = 95) {
 export function headlineCards(r, { working = false } = {}) {
   const multi = r.hours_run > HOURS_PER_YEAR
   const total = r.years.reduce((s, y) => s + y.fog_hours, 0)
-  const fog = r.first_fog_hour
+  const fog = firstFogHour(r, working)          // follows the working-hours view
   const full = r.full_hour
 
   // 1. Desiccant life, in days (same unit as box 2), date below
@@ -212,11 +213,12 @@ export function headlineCards(r, { working = false } = {}) {
 
   // 2. First visible fog, in days after installation, date below
   let first
+  const firstLabel = working ? 'First visible fog in working hours' : 'First visible fog'
   if (fog === null) {
-    first = { tone: 'none', label: 'First visible fog', value: 'None', detail: r.lb === 0 ? 'Clear all year' : `Clear through the ${formatDuration(r.hours_run)} shown` }
+    first = { tone: 'none', label: firstLabel, value: 'None', detail: r.lb === 0 ? 'Clear all year' : `Clear through the ${formatDuration(r.hours_run)} shown` }
   } else {
-    let label = 'First visible fog'
-    if (r.lb > 0 && (full === null || fog < full)) label = 'First visible fog, before the desiccant is full'
+    let label = firstLabel
+    if (r.lb > 0 && (full === null || fog < full)) label = `${firstLabel}, before the desiccant is full`
     first = { tone: 'fog', label, value: formatDays(fog), detail: formatDate(fog, multi) }
   }
 
@@ -239,6 +241,23 @@ export function headlineCards(r, { working = false } = {}) {
   }
 
   return [{ key: 'life', ...life }, { key: 'first', ...first }, { key: 'amount', ...amount }]
+}
+
+/**
+ * First hour of visible fog since installation. With working = true, the
+ * first one inside working hours (a fog that starts at night and is gone
+ * by 08:00 does not count). null when there is none.
+ */
+export function firstFogHour(r, working = false) {
+  if (!working) return r.first_fog_hour
+  for (let yi = 0; yi < r.years.length; yi++) {
+    const s = r.years[yi].fog
+    if (!s) continue
+    for (let i = 0; i < s.length; i++) {
+      if (s.charCodeAt(i) !== 48 && isWorkingHour(i)) return yi * HOURS_PER_YEAR + i
+    }
+  }
+  return null
 }
 
 /** Is this hour of the year a working hour? Day 0 (January 1) is a Monday. */

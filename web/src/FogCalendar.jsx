@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
-  calendarRows, desiccantStatus, formatDate, formatDays, HOURS_PER_YEAR, isWorkingHour, levelRangeUm, levelWord,
+  calendarRows, desiccantStatus, firstFogHour, formatDate, formatDays, HOURS_PER_YEAR, isWorkingHour, levelRangeUm, levelWord,
   MONTH_SHORT, MONTH_START_DAY, remainingOnDay, yearStats,
 } from '../../shared/story.js'
 import { WORKING_HOURS } from '../../shared/scenario.js'
@@ -122,7 +122,8 @@ function YearPanel({ r, index, width, progress, multi, workingOnly }) {
 
   const xOf = (gh) => (((gh - y0) / 24) / DAYS) * width
   const fullHere = r.lb > 0 && r.full_hour !== null && r.full_hour >= y0 && r.full_hour < y1
-  const fogHere = r.first_fog_hour !== null && r.first_fog_hour >= y0 && r.first_fog_hour < y1
+  const firstFog = firstFogHour(r, workingOnly)   // the marker follows the working-hours view
+  const fogHere = firstFog !== null && firstFog >= y0 && firstFog < y1
 
   function onMove(e) {
     const box = e.currentTarget.getBoundingClientRect()
@@ -135,7 +136,7 @@ function YearPanel({ r, index, width, progress, multi, workingOnly }) {
 
   const marks = []
   if (fullHere) marks.push({ key: 'full', x: xOf(r.full_hour), text: `Desiccant full, ${formatDate(r.full_hour, false)}` })
-  if (fogHere) marks.push({ key: 'fog', x: xOf(r.first_fog_hour), text: `First fog, ${formatDate(r.first_fog_hour, false)}` })
+  if (fogHere) marks.push({ key: 'fog', x: xOf(firstFog), text: `First fog${workingOnly ? ' in working hours' : ''}, ${formatDate(firstFog, false)}` })
 
   return (
     <section className="ypanel" aria-label={`Year ${index + 1}`}>
