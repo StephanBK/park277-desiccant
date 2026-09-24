@@ -162,3 +162,18 @@ test('pounds to grams against independent literal values', () => {
     assert.equal(engineParams({ ...DEFAULTS, lb: Number(lb) }).grams, g, `${lb} lb`)
   }
 })
+
+test('parity: the default engine request is pinned (mirrored in desiccant_life- tests/test_parity.py)', () => {
+  // The old simulator (desiccant_life- frontend/src/defaults.json, embedded in
+  // Odoo) starts on exactly this request; its test suite pins the same values.
+  // Change one side only and one of the two suites fails.
+  assert.deepEqual({ ...engineParams(DEFAULTS) }, {
+    address: '277 Park Avenue, New York, NY 10172', orientation: 'north',
+    width_in: 60, height_in: 96, offset_in: 0.6, u_ip: 0.16, r_ip: 0.97,
+    desiccant: 'ms3a', desorption: true, absorptance: 0.1, floors: 50, window_floor: 25,
+    p_occ_pa: 5, p_unocc_pa: 0, occ_start_h: 7, occ_end_h: 19, weekdays_only: true,
+    sealant_out: 'silicone', sealant_in: 'silicone', max_years: 20,
+    f_cold: 0.014, al_out: 'wet_sealed', al_in: 'wet_sealed', grams: 3628.739, t_in: 70, rh_in: 30,
+    trace: false, fog_map: true, years_after_full: 1,
+  })
+})

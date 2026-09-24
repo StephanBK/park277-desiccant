@@ -1,6 +1,6 @@
 # HANDOVER: 277 Park cavity fog outlook
 
-Last session: 2026-09-23 (session 1). State: v1.8.0. Repo
+Last session: 2026-09-23 (session 1). State: v1.9.0. Repo
 StephanBK/park277-desiccant (Stephan's personal account, not INOVUES-APPS),
 local clone ~/Documents/park277-desiccant. v1.3.0 deployed on Railway
 (main fdb261f) against the fixed engine (desiccant_life- main c20a557);
@@ -16,6 +16,19 @@ v1.4.0 delivered as a patch.
    variables needed.
 If the engine lacks the fog map, the page shows "The simulation did not
 run" with the detail "engine returned no fog map": by design, not a crash.
+
+## v1.9.0 (same day): parity with the old simulator in Odoo
+
+- The old simulator (desiccant_life-, embedded in Odoo) now starts on this
+  app's default scenario and uses the same definitions (first visible fog,
+  fog days per year, one whole year past saturation). Proven: identical
+  inputs give byte-identical engine results; engine HANDOVER session 7.
+- test/engine.test.js "parity" pins this app's default engine request to
+  the literal values that desiccant_life- tests/test_parity.py pins too.
+  Change the default scenario here AND in desiccant_life-
+  frontend/src/defaults.json, or one suite fails.
+- Next (Stephan: "both"): one front end later, this app plus an Advanced
+  mode with the old app's inputs, so the two cannot drift at all.
 
 ## v1.8.0 (same day): the fog-days box follows the working-hours toggle
 
